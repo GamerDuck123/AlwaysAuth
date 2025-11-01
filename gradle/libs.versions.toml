@@ -1,0 +1,30 @@
+metadata.format.version = "1.1"
+
+[versions]
+
+minecraft = "1.21.10"
+loader = "0.17.3"
+api = "0.135.0" #Dont include the minecraft version
+brigadier = "1.2.9"
+parchment_mappings="2025.10.12"
+neo="21.9.16-beta"
+neoform="20251010.172816" #Dont include the minecraft version
+mixin="0.8.5"
+extras="0.5.0"
+velocity="3.4.0-SNAPSHOT"
+#bungeecord="1.19-R0.1-SNAPSHOT"
+
+authlib="7.0.61"
+
+[libraries]
+
+minecraft = { group = "com.mojang", name = "minecraft", version.ref = "minecraft" }
+fabric_loader = { group = "net.fabricmc", name = "fabric-loader", version.ref = "loader" }
+fabric_api = { group = "net.fabricmc.fabric-api", name = "fabric-api", version.ref = "api" }
+brigadier = { group = "com.mojang", name = "brigadier", version.ref = "brigadier" }
+mixin = { group = "org.spongepowered", name = "mixin", version.ref = "mixin" }
+extras = { group = "io.github.llamalad7", name = "mixinextras-common", version.ref = "extras" }
+velocity = { group = "com.velocitypowered", name = "velocity-api", version.ref = "velocity" }
+#bungeecord = { group = "net.md-5", name = "bungeecord-api", version.ref = "bungeecord" }
+
+authlib = { group = "com.mojang", name = "authlib", version.ref = "authlib" }

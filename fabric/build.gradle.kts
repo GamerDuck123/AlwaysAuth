@@ -1,0 +1,127 @@
+dependencies {
+    minecraft(libs.minecraft)
+
+    mappings(loom.layered {
+        officialMojangMappings()
+        parchment("org.parchmentmc.data:parchment-${libs.versions.minecraft.get()}:${libs.versions.parchment.mappings.get()}@zip")
+    })
+    modImplementation(libs.fabric.loader)
+    modImplementation("${libs.fabric.api.get()}+${libs.versions.minecraft.get()}")
+
+
+    implementation("org.xerial:sqlite-jdbc:3.45.0.0")
+    include("org.xerial:sqlite-jdbc:3.45.0.0")
+    implementation("com.google.code.gson:gson:2.10.1")
+    include("com.google.code.gson:gson:2.10.1")
+}
+
+modrinth {
+    uploadFile.set(project.tasks.remapJar)
+    gameVersions.addAll(libs.versions.minecraft.get())
+}
+
+tasks.register("publishCurseForge", net.darkhax.curseforgegradle.TaskPublishCurseForge::class) {
+    apiToken = System.getenv("CURSEFORGE_TOKEN")
+
+    val projectId = findProperty("curseforgeID") as String?
+
+    val mainFile = upload(projectId, project.tasks.remapJar)
+    mainFile.addModLoader("Fabric")
+    mainFile.addGameVersion(libs.versions.minecraft.get())
+    mainFile.releaseType = property("versionType") as String
+    mainFile.displayName = "${project.version as String}-${project.name}"
+    mainFile.changelog = rootProject.file("CHANGELOG.md").readText()
+}
+
+tasks.register<Copy>("copyCommonSources") {
+    from("$rootDir/common/src/main/java") {
+        into("common/java")
+    }
+
+
+    from("$rootDir/common/src/main/resources") {
+        exclude("META-INF/**")
+        exclude("templates/**")
+        into("common/resources")
+        filesMatching("**/${project.property("modid")}.mixins.json") {
+            expand(mapOf(
+                "group" to rootProject.group,
+            ))
+        }
+    }
+
+//    Fill in default config from commons
+//    from("$rootDir/common/src/main/resources/templates") {
+//        include("${project.property("modid")}.properties")
+//        into("common/resources")
+//        includeEmptyDirs = false
+//
+//        filesMatching("**/${project.property("modid")}.properties") {
+//            expand(mapOf(
+//                "default_path" to "plugins/${project.name}/storage",
+//            ))
+//        }
+//    }
+
+
+    into("${layout.buildDirectory}/generated/sources")
+}
+
+sourceSets {
+    main {
+        java {
+            srcDir("${layout.buildDirectory}/generated/sources/common/java")
+        }
+        resources {
+            srcDir("${layout.buildDirectory}/generated/sources/common/resources")
+        }
+    }
+}
+
+tasks.named<JavaCompile>("compileJava") {
+    dependsOn("copyCommonSources")
+}
+
+loom {
+//    splitEnvironmentSourceSets()
+    accessWidenerPath.set(file("../common/src/main/resources/${project.property("modid")}.accesswidener"))
+
+    mods {
+        create(project.property("modid").toString()) {
+            sourceSet(sourceSets.main.get())
+        }
+    }
+
+}
+
+tasks {
+    processResources {
+        dependsOn("copyCommonSources")
+        val props = mapOf(
+            "name" to rootProject.name,
+            "group" to project.group,
+            "version" to project.version,
+            "modid" to rootProject.property("modid"),
+            "mainFile" to "${rootProject.name}Mod",
+            "description" to project.description,
+            "fabricApiVersion" to libs.versions.api.get(),
+            "fabricLoaderVersion" to libs.versions.loader.get(),
+            "minecraftVersion" to libs.versions.minecraft.get(),
+            "author" to project.property("author"),
+            "website" to project.property("website"),
+            "sources" to project.property("sources"),
+            "issues" to project.property("issues")
+        )
+
+        from("src/main/templates") {
+            listOf(
+                "fabric.mod.json",
+            ).forEach {
+                filesMatching(it) {
+                    expand(props)
+                }
+            }
+        }
+        into(layout.buildDirectory.dir("src/main/resources"))
+    }
+}

@@ -1,0 +1,30 @@
+license="${modLicense}"
+
+issueTrackerURL="${issueTracker}"
+
+[[mods]]
+modId="${modid}"
+version="${modVersion}"
+displayName="${modName}"
+authors="${modAuthor}"
+description='''${modDescription}'''
+
+[[mixins]]
+config="${modid}.mixins.json"
+
+[[accessTransformers]]
+file="META-INF/accesstransformer.cfg"
+
+[[dependencies.${modid}]]
+    modId="neoforge"
+    type="required"
+    versionRange="[${neoVersion},)"
+    ordering="NONE"
+    side="BOTH"
+
+[[dependencies.${modid}]]
+    modId="minecraft"
+    type="required"
+    versionRange="[${minecraftVersionRange}]"
+    ordering="NONE"
+    side="BOTH"

@@ -1,0 +1,6 @@
+name: '${name}'
+main: '${group}.${mainFile}'
+
+version: '${version}'
+api-version: '${apiVersion}'
+description: '${description}'

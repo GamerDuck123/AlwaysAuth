@@ -1,0 +1,18 @@
+name: '${name}'
+main: '${group}.${mainFile}'
+
+version: '${version}'
+description: '${description}'
+api-version: '${apiVersion}'
+
+commands:
+  alwaysauth:
+    description: Manage session fallback system
+    usage: /alwaysauth [status|stats|toggle|security|cleanup|reload]
+    aliases: [aa, alwaysa]
+    permission: alwaysauth.admin
+
+permissions:
+  alwaysauth.admin:
+    description: Access to all AlwaysAuth commands
+    default: op
