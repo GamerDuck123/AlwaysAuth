@@ -16,9 +16,6 @@ public class FabricPlatform extends Platform<CommandSourceStack> {
 
     public FabricPlatform(MinecraftServer minecraftServer) {
         super(minecraftServer.getServerDirectory().resolve("config/AlwaysAuth"), LOGGER);
-
-
-
     }
 
     @Override

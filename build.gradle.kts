@@ -47,8 +47,10 @@ allprojects {
         if (this.name == "bungeecord") {
             apply(plugin = "bungeecord-plugin")
             apply(plugin = "modrinth-plugin")
-            // Waterfall?
-            apply(plugin = "hangar-plugin")
+        }
+
+        if (this.name == "standalone") {
+            apply(plugin = "standalone-plugin")
         }
 
         if (this.name == "common") {

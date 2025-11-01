@@ -5,7 +5,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
-public class SpigotPlatform extends Platform<Player, CommandSender> {
+public class SpigotPlatform extends Platform<CommandSender> {
     public SpigotPlatform(JavaPlugin bootstrap) {
         super(bootstrap.getDataFolder().toPath(), bootstrap.getLogger());
 
