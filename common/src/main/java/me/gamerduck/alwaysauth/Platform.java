@@ -12,12 +12,16 @@ public abstract class Platform<CS> {
     private SessionConfig config;
     private final Path platformFolder;
 
+    public static Platform<?> mixinOnly$instance;
+
     public Platform(Path platformFolder) {
         this.platformFolder = platformFolder;
+        mixinOnly$instance = this;
         try {
             config = new SessionConfig(platformFolder.toFile(), this);
             sendLogMessage("Configuration loaded: " + config);
 
+            if (config.getExternalIp().equalsIgnoreCase("http://127.0.0.1")) {
             proxyServer = new SessionProxyServer(
                     config.getPort(),
                     platformFolder.toFile(),
@@ -35,7 +39,10 @@ public abstract class Platform<CS> {
             sendLogMessage("AlwaysAuth enabled! Proxy running on port " + config.getPort());
             sendLogMessage("Fallback mode: " + (config.isFallbackEnabled() ? "ENABLED" : "DISABLED"));
             sendLogMessage("Security level: " + config.getSecurityLevel().toUpperCase());
-
+            } else {
+                sendLogMessage("AlwaysAuth enabled! Using external domain " + config.getSessionServerUrl());
+                proxyServer = null;
+            }
         } catch (Exception e) {
             sendSevereLogMessage("Failed to enable AlwaysAuth" + e.getMessage());
             throw new RuntimeException(e);

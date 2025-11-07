@@ -15,7 +15,9 @@ public class SessionConfig {
     private final Platform platform;
 
     // Default values
+    private static final String DEFAULT_EXTERNAL_DOMAIN = "http://127.0.0.1";
     private static final int DEFAULT_PORT = 8765;
+
     private static final boolean DEFAULT_FALLBACK_ENABLED = true;
     private static final int DEFAULT_MAX_OFFLINE_HOURS = 72; // 3 days
     private static final int DEFAULT_CLEANUP_DAYS = 30;
@@ -58,6 +60,7 @@ public class SessionConfig {
     }
 
     private void setDefaults() {
+        properties.setProperty("external-domain", DEFAULT_EXTERNAL_DOMAIN);
         properties.setProperty("port", String.valueOf(DEFAULT_PORT));
         properties.setProperty("fallback-enabled", String.valueOf(DEFAULT_FALLBACK_ENABLED));
         properties.setProperty("max-offline-hours", String.valueOf(DEFAULT_MAX_OFFLINE_HOURS));
@@ -106,6 +109,14 @@ public class SessionConfig {
         properties.setProperty("upstream-server", server);
     }
 
+    public String getExternalIp() {
+        return properties.getProperty("external-domain", DEFAULT_UPSTREAM_SESSION_SERVER);
+    }
+
+    public void setExternalIp(String ip) {
+        properties.setProperty("external-domain", ip);
+    }
+
     public int getCleanupDays() {
         return Integer.parseInt(properties.getProperty("cleanup-days", String.valueOf(DEFAULT_CLEANUP_DAYS)));
     }
@@ -137,7 +148,7 @@ public class SessionConfig {
     }
 
     public String getSessionServerUrl() {
-        return "http://127.0.0.1:" + getPort();
+        return getExternalIp() + ":" + getPort();
     }
 
     public String getDatabaseType() {
@@ -200,9 +211,11 @@ public class SessionConfig {
     @Override
     public String toString() {
         return "SessionConfig{" +
-                "port=" + getPort() +
+                "external-ip=" + getExternalIp() +
+                ", port=" + getPort() +
                 ", fallbackEnabled=" + isFallbackEnabled() +
                 ", securityLevel=" + getSecurityLevel() +
+                ", upstream-server=" + getUpstreamSessionServer() +
                 ", maxOfflineHours=" + getMaxOfflineHours() +
                 ", cleanupDays=" + getCleanupDays() +
                 ", databaseType=" + getDatabaseType() +

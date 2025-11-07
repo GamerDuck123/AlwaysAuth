@@ -11,12 +11,10 @@ import java.util.logging.Logger;
 
 public class PaperPlatform extends Platform<CommandSourceStack> {
 
-    private final Logger LOGGER;
+    private static final Logger LOGGER = Logger.getLogger("AlwaysAuth");
 
     public PaperPlatform(JavaPlugin bootstrap) {
         super(bootstrap.getDataFolder().toPath());
-
-        this.LOGGER = bootstrap.getLogger();
 
         AuthenticationURLReplacer.replaceSessionService(this, config().getSessionServerUrl());
         ServerPropertiesReplacer.forcePreventProxyConnections(this);

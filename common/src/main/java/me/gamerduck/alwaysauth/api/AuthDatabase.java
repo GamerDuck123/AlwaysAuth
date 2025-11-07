@@ -109,7 +109,6 @@ public class AuthDatabase {
                     last_seen = VALUES(last_seen), profile_data = VALUES(profile_data)
                 """;
             } else {
-                // H2 supports MERGE which works like "INSERT OR REPLACE"
                 sql = """
                     MERGE INTO player_auth (username, uuid, last_ip, last_seen, profile_data)
                     KEY (username)

@@ -12,11 +12,11 @@ import java.nio.charset.StandardCharsets;
 import java.util.concurrent.Executors;
 
 /**
- * Core session proxy server that forwards authentication to Mojang
- * and falls back to local database when Mojang is unavailable.
+ * Core session proxy server that forwards authentication to Upstream
+ * and falls back to local database when Upstream is unavailable.
  */
 public class SessionProxyServer {
-    private static final int MOJANG_TIMEOUT_MS = 3000;
+    private static final int UPSTREAM_TIMEOUT_MS = 3000;
 
     private final HttpServer server;
     private final AuthDatabase database;
@@ -38,7 +38,7 @@ public class SessionProxyServer {
         else this.database = new AuthDatabase(new File(dataFolder, "authcache.db"), platform);
         this.upstreamSessionServer = config.getUpstreamSessionServer();
 
-        this.server = HttpServer.create(new InetSocketAddress("127.0.0.1", port), 0);
+        this.server = HttpServer.create(new InetSocketAddress("0.0.0.0", port), 0);
         this.server.createContext("/session/minecraft/hasJoined", this::handleHasJoined);
         this.server.createContext("/session/minecraft/join", this::handleJoin);
         this.server.setExecutor(Executors.newVirtualThreadPerTaskExecutor());
@@ -74,21 +74,20 @@ public class SessionProxyServer {
             platform.sendLogMessage("Authentication request for user: " + username + " (serverId: " + serverId + ")");
 
             try {
-                String mojangResponse = forwardToMojang("/session/minecraft/hasJoined", query);
+                String upstreamResponse = forwardToUpstream("/session/minecraft/hasJoined", query);
 
-                if (mojangResponse != null && !mojangResponse.isEmpty()) {
-                    JsonObject profile = gson.fromJson(mojangResponse, JsonObject.class);
+                if (upstreamResponse != null && !upstreamResponse.isEmpty()) {
+                    JsonObject profile = gson.fromJson(upstreamResponse, JsonObject.class);
                     database.cacheAuthentication(username, ip, profile);
-                    platform.sendLogMessage("Successfully authenticated " + username + " via Mojang");
+                    platform.sendLogMessage("Successfully authenticated " + username + " via Upstream");
                 }
 
-                sendResponse(exchange, 200, mojangResponse);
+                sendResponse(exchange, 200, upstreamResponse);
                 return;
 
             } catch (Exception e) {
-                platform.sendWarningLogMessage("Mojang authentication failed for " + username + ": " + e.getMessage());
+                platform.sendWarningLogMessage("Upstream authentication failed for " + username + ": " + e.getMessage());
 
-                // Fall back to local database
                 if (config.isFallbackEnabled()) {
                     String fallbackResponse = database.getFallbackAuth(username, ip, config.getMaxOfflineHours());
 
@@ -114,7 +113,7 @@ public class SessionProxyServer {
     private void handleJoin(HttpExchange exchange) throws IOException {
         try {
             String body = readRequestBody(exchange);
-            String response = forwardToMojangPost("/session/minecraft/join", body);
+            String response = forwardToUpstreamPost("/session/minecraft/join", body);
 
             sendResponse(exchange, response != null ? 204 : 500, response != null ? "" : "Failed");
 
@@ -124,12 +123,12 @@ public class SessionProxyServer {
         }
     }
 
-    private String forwardToMojang(String endpoint, String query) throws IOException {
+    private String forwardToUpstream(String endpoint, String query) throws IOException {
         URL url = new URL(upstreamSessionServer + endpoint + "?" + query);
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setRequestMethod("GET");
-        conn.setConnectTimeout(MOJANG_TIMEOUT_MS);
-        conn.setReadTimeout(MOJANG_TIMEOUT_MS);
+        conn.setConnectTimeout(UPSTREAM_TIMEOUT_MS);
+        conn.setReadTimeout(UPSTREAM_TIMEOUT_MS);
 
         int responseCode = conn.getResponseCode();
         if (responseCode == 200) {
@@ -138,16 +137,16 @@ public class SessionProxyServer {
             return ""; // No content means auth failed
         }
 
-        throw new IOException("Mojang returned status: " + responseCode);
+        throw new IOException("Upstream returned status: " + responseCode);
     }
 
-    private String forwardToMojangPost(String endpoint, String body) throws IOException {
+    private String forwardToUpstreamPost(String endpoint, String body) throws IOException {
         URL url = new URL(upstreamSessionServer + endpoint);
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setRequestMethod("POST");
         conn.setDoOutput(true);
-        conn.setConnectTimeout(MOJANG_TIMEOUT_MS);
-        conn.setReadTimeout(MOJANG_TIMEOUT_MS);
+        conn.setConnectTimeout(UPSTREAM_TIMEOUT_MS);
+        conn.setReadTimeout(UPSTREAM_TIMEOUT_MS);
         conn.setRequestProperty("Content-Type", "application/json");
 
         try (OutputStream os = conn.getOutputStream()) {
@@ -159,7 +158,7 @@ public class SessionProxyServer {
             return "";
         }
 
-        throw new IOException("Mojang returned status: " + responseCode);
+        throw new IOException("Upstream returned status: " + responseCode);
     }
 
     private void sendResponse(HttpExchange exchange, int statusCode, String response) throws IOException {

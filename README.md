@@ -1,8 +1,6 @@
 # AlwaysAuth
 
-**AlwaysAuth** is a robust authentication solution for Minecraft servers that ensures your players can log in even if Mojang's authentication servers experience downtime. Unlike traditional offline-mode workarounds, AlwaysAuth keeps your server in **online mode** while providing a seamless failover mechanism to a local authentication system.
-
-Designed for server admins who value uptime and security, AlwaysAuth supports a wide range of server platforms, allowing you to maintain player authentication without interruption.
+**AlwaysAuth** is a fallback authentication solution for Minecraft servers that ensures your players can log in even if Mojang's authentication servers experience downtime. Unlike traditional offline-mode workarounds, AlwaysAuth keeps your server in **online mode** while providing a seamless failover mechanism to a local authentication system.
 
 ---
 
@@ -12,7 +10,7 @@ AlwaysAuth operates by inserting a **local authentication server** between your 
 
 1. When a player tries to log in, AlwaysAuth first sends the authentication request to Mojang.
 2. If Mojang is online and responds, the request passes back to your server normally.
-3. If Mojang is offline, AlwaysAuth uses its **local fallback system** to verify the user.
+3. If Mojang is offline, AlwaysAuth uses its local fallback system to verify the user.
 
 This approach ensures:
 
@@ -25,12 +23,12 @@ This approach ensures:
 ### AlwaysAuth vs AlwaysOnline
 
 | Feature                   | AlwaysAuth | AlwaysOnline |
-| ------------------------- | ---------- | ------------ |
+| ------------------------- |------------| ------------ |
 | Spigot Support            | ✅          | ✅            |
 | Paper Support             | ✅          | ✅            |
-| BungeeCord Support        | ✅          | ✅            |
+| BungeeCord Support        | ❌*         | ✅            |
 | Velocity Support          | ✅          | ✅            |
-| Sponge Support            | ❌          | ✅            |
+| Sponge Support            | ❌**        | ✅            |
 | Fabric Support            | ✅          | ❌            |
 | NeoForge Support          | ✅          | ❌            |
 | Instant Failover          | ✅          | ❌            |
@@ -39,6 +37,11 @@ This approach ensures:
 | Records Metrics           | ❌          | ✅            |
 | Multiple Security Modes   | ✅          | ❌            |
 | IP-Based Validation       | ✅          | ✅            |
+
+*There is no possible way to set a custom session server on bungeecord, nor ever will according to md_5, see
+[here](https://github.com/SpigotMC/BungeeCord/pull/3201). I will be creating a work around that involves many extra steps, however I recommend switching to Velocity or using the Standalone jar
+
+**Sponge support is planned to be added later, I am just unfamiliar with the SpongeAPI
 
 ---
 
