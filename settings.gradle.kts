@@ -1,5 +1,5 @@
 rootProject.name = "AlwaysAuth"
-include("common", "paper", "fabric", "neoforge", "spigot", "bungeecord", "velocity")
+include("common", "paper", "fabric", "neoforge", "spigot", "velocity")
 
 pluginManagement {
     plugins {

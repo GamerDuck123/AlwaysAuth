@@ -12,9 +12,11 @@ neoform="20251010.172816" #Dont include the minecraft version
 mixin="0.8.5"
 extras="0.5.0"
 velocity="3.4.0-SNAPSHOT"
-#bungeecord="1.19-R0.1-SNAPSHOT"
+bungeecord="1.21-R0.4"
 
 authlib="7.0.61"
+h2="2.3.232"
+gson="2.10.1"
 
 [libraries]
 
@@ -25,6 +27,8 @@ brigadier = { group = "com.mojang", name = "brigadier", version.ref = "brigadier
 mixin = { group = "org.spongepowered", name = "mixin", version.ref = "mixin" }
 extras = { group = "io.github.llamalad7", name = "mixinextras-common", version.ref = "extras" }
 velocity = { group = "com.velocitypowered", name = "velocity-api", version.ref = "velocity" }
-#bungeecord = { group = "net.md-5", name = "bungeecord-api", version.ref = "bungeecord" }
+bungeecord = { group = "net.md-5", name = "bungeecord-api", version.ref = "bungeecord" }
 
 authlib = { group = "com.mojang", name = "authlib", version.ref = "authlib" }
+h2 = { group = "com.h2database", name = "h2", version.ref = "h2" }
+gson = { group = "com.google.code.gson", name = "gson", version.ref = "gson" }

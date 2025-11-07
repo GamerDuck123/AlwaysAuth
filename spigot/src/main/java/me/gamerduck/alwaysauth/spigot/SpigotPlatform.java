@@ -1,13 +1,24 @@
 package me.gamerduck.alwaysauth.spigot;
 
 import me.gamerduck.alwaysauth.Platform;
+import me.gamerduck.alwaysauth.reflection.AuthenticationURLReplacer;
+import me.gamerduck.alwaysauth.reflection.ServerPropertiesReplacer;
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.util.logging.Logger;
+
 public class SpigotPlatform extends Platform<CommandSender> {
+
+    private final Logger LOGGER;
+
     public SpigotPlatform(JavaPlugin bootstrap) {
-        super(bootstrap.getDataFolder().toPath(), bootstrap.getLogger());
+        super(bootstrap.getDataFolder().toPath());
+
+        this.LOGGER = bootstrap.getLogger();
+
+        AuthenticationURLReplacer.replaceSessionService(this, config().getSessionServerUrl());
+        ServerPropertiesReplacer.forcePreventProxyConnections(this);
 
         bootstrap.getCommand("alwaysauth").setExecutor((commandSender, command, s, args) -> {
             if (args.length == 0) {
@@ -38,6 +49,21 @@ public class SpigotPlatform extends Platform<CommandSender> {
     @Override
     public void sendMessage(CommandSender commandSender, String msg) {
         commandSender.sendMessage(msg);
+    }
+
+    @Override
+    public void sendLogMessage(String msg) {
+        LOGGER.info(msg);
+    }
+
+    @Override
+    public void sendSevereLogMessage(String msg) {
+        LOGGER.severe(msg);
+    }
+
+    @Override
+    public void sendWarningLogMessage(String msg) {
+        LOGGER.warning(msg);
     }
 
 }

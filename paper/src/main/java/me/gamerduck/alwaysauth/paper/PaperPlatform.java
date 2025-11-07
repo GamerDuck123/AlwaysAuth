@@ -2,14 +2,24 @@ package me.gamerduck.alwaysauth.paper;
 
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import me.gamerduck.alwaysauth.Platform;
+import me.gamerduck.alwaysauth.reflection.AuthenticationURLReplacer;
+import me.gamerduck.alwaysauth.reflection.ServerPropertiesReplacer;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.util.Collections;
 import java.util.List;
+import java.util.logging.Logger;
 
 public class PaperPlatform extends Platform<CommandSourceStack> {
+
+    private final Logger LOGGER;
+
     public PaperPlatform(JavaPlugin bootstrap) {
-        super(bootstrap.getDataFolder().toPath(), bootstrap.getLogger());
+        super(bootstrap.getDataFolder().toPath());
+
+        this.LOGGER = bootstrap.getLogger();
+
+        AuthenticationURLReplacer.replaceSessionService(this, config().getSessionServerUrl());
+        ServerPropertiesReplacer.forcePreventProxyConnections(this);
 
         bootstrap.registerCommand("alwaysauth", List.of("aa", "alwaysa"), (commandSourceStack, args) -> {
             if (commandSourceStack.getSender().hasPermission("alwaysauth.admin")) {
@@ -46,6 +56,21 @@ public class PaperPlatform extends Platform<CommandSourceStack> {
     @Override
     public void sendMessage(CommandSourceStack commandSender, String msg) {
         commandSender.getSender().sendMessage(msg);
+    }
+
+    @Override
+    public void sendLogMessage(String msg) {
+        LOGGER.info(msg);
+    }
+
+    @Override
+    public void sendSevereLogMessage(String msg) {
+        LOGGER.severe(msg);
+    }
+
+    @Override
+    public void sendWarningLogMessage(String msg) {
+        LOGGER.warning(msg);
     }
 
 }

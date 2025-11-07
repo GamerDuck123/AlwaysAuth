@@ -5,28 +5,23 @@ import me.gamerduck.alwaysauth.api.SessionConfig;
 import me.gamerduck.alwaysauth.api.SessionProxyServer;
 
 import java.nio.file.Path;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public abstract class Platform<CS> {
     private final SessionProxyServer proxyServer;
     private SessionConfig config;
     private final Path platformFolder;
-    private final Logger logger;
 
-    public Platform(Path platformFolder, Logger logger) {
+    public Platform(Path platformFolder) {
         this.platformFolder = platformFolder;
-        this.logger = logger;
         try {
-            // Load configuration
-            config = new SessionConfig(platformFolder.toFile(), logger);
-            logger.info("Configuration loaded: " + config);
+            config = new SessionConfig(platformFolder.toFile(), this);
+            sendLogMessage("Configuration loaded: " + config);
 
-            // Start proxy server
             proxyServer = new SessionProxyServer(
                     config.getPort(),
                     platformFolder.toFile(),
-                    logger,
+                    this,
                     config
             );
             proxyServer.start();
@@ -37,27 +32,30 @@ public abstract class Platform<CS> {
 //                logger.warning("-Dminecraft.api.session.host=" + config.getSessionServerUrl());
 //            }
 
-            logger.info("AlwaysAuth enabled! Proxy running on port " + config.getPort());
-            logger.info("Fallback mode: " + (config.isFallbackEnabled() ? "ENABLED" : "DISABLED"));
-            logger.info("Security level: " + config.getSecurityLevel().toUpperCase());
+            sendLogMessage("AlwaysAuth enabled! Proxy running on port " + config.getPort());
+            sendLogMessage("Fallback mode: " + (config.isFallbackEnabled() ? "ENABLED" : "DISABLED"));
+            sendLogMessage("Security level: " + config.getSecurityLevel().toUpperCase());
 
         } catch (Exception e) {
-            logger.log(Level.SEVERE, "Failed to enable AlwaysAuth", e);
+            sendSevereLogMessage("Failed to enable AlwaysAuth" + e.getMessage());
             throw new RuntimeException(e);
         }
     }
 
     public abstract void sendMessage(CS commandSender, String msg);
+    public abstract void sendLogMessage(String msg);
+    public abstract void sendSevereLogMessage(String msg);
+    public abstract void sendWarningLogMessage(String msg);
 
     public void onDisable() {
         if (proxyServer != null) {
             proxyServer.stop();
         }
-        logger.info("AlwaysAuth disabled");
+        sendLogMessage("AlwaysAuth disabled");
     }
 
     public void cmdStatus(CS player) {
-        sendMessage(player, "§6§lSession Fallback Status");
+        sendMessage(player, "§6§lAlwaysAuth Status");
         sendMessage(player,"§7Proxy Port: §f" + config.getPort());
         sendMessage(player,"§7Fallback: " + (config.isFallbackEnabled() ? "§aENABLED" : "§cDISABLED"));
         sendMessage(player,"§7Security: §f" + config.getSecurityLevel().toUpperCase());
@@ -98,7 +96,7 @@ public abstract class Platform<CS> {
     }
 
     public void cmdReload(CS player) {
-        config = new SessionConfig(platformFolder.toFile(), logger);
+        config = new SessionConfig(platformFolder.toFile(), this);
         sendMessage(player,"§6Configuration reloaded");
     }
 
@@ -107,7 +105,7 @@ public abstract class Platform<CS> {
     }
 
     public void cmdHelp(CS player) {
-        sendMessage(player,"§6§lSession Fallback §7v1.0");
+        sendMessage(player,"§6§lAlways Auth");
         sendMessage(player,"§7Commands:");
         sendMessage(player,"§e/alwaysauth status §7- Show current status");
         sendMessage(player,"§e/alwaysauth stats §7- Show cache statistics");
@@ -129,7 +127,4 @@ public abstract class Platform<CS> {
         return platformFolder;
     }
 
-    public Logger logger() {
-        return logger;
-    }
 }

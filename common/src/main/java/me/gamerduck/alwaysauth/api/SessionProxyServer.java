@@ -4,54 +4,57 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import me.gamerduck.alwaysauth.Platform;
 
 import java.io.*;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.Executors;
-import java.util.logging.Logger;
 
 /**
  * Core session proxy server that forwards authentication to Mojang
  * and falls back to local database when Mojang is unavailable.
  */
 public class SessionProxyServer {
-    private static final String MOJANG_SESSION_SERVER = "https://sessionserver.mojang.com";
     private static final int MOJANG_TIMEOUT_MS = 3000;
 
     private final HttpServer server;
     private final AuthDatabase database;
-    private final Logger logger;
     private final Gson gson;
     private final SessionConfig config;
+    private final Platform platform;
+    private final String upstreamSessionServer;
 
     public AuthDatabase getDatabase() {
         return database;
     }
 
-    public SessionProxyServer(int port, File dataFolder, Logger logger, SessionConfig config) throws IOException {
-        this.logger = logger;
+    public SessionProxyServer(int port, File dataFolder, Platform platform, SessionConfig config) throws IOException {
+        this.platform = platform;
         this.gson = new Gson();
         this.config = config;
-        this.database = new AuthDatabase(new File(dataFolder, "authcache.db"), logger);
+        if (config.isRemoteDatabase()) this.database = new AuthDatabase(config.getDatabaseHost(), config.getDatabasePort(),
+                config.getDatabaseName(), config.getDatabaseUsername(), config.getDatabasePassword(), config.getDatabaseType(), platform);
+        else this.database = new AuthDatabase(new File(dataFolder, "authcache.db"), platform);
+        this.upstreamSessionServer = config.getUpstreamSessionServer();
 
         this.server = HttpServer.create(new InetSocketAddress("127.0.0.1", port), 0);
         this.server.createContext("/session/minecraft/hasJoined", this::handleHasJoined);
         this.server.createContext("/session/minecraft/join", this::handleJoin);
         this.server.setExecutor(Executors.newVirtualThreadPerTaskExecutor());
 
-        logger.info("Session proxy server created on port " + port);
+        platform.sendLogMessage("Session proxy server created on port " + port);
     }
 
     public void start() {
         server.start();
-        logger.info("Session proxy server started");
+        platform.sendLogMessage("Session proxy server started");
     }
 
     public void stop() {
         server.stop(0);
         database.close();
-        logger.info("Session proxy server stopped");
+        platform.sendLogMessage("Session proxy server stopped");
     }
 
     private void handleHasJoined(HttpExchange exchange) throws IOException {
@@ -68,7 +71,7 @@ public class SessionProxyServer {
                 return;
             }
 
-            logger.info("Authentication request for user: " + username + " (serverId: " + serverId + ")");
+            platform.sendLogMessage("Authentication request for user: " + username + " (serverId: " + serverId + ")");
 
             try {
                 String mojangResponse = forwardToMojang("/session/minecraft/hasJoined", query);
@@ -76,25 +79,25 @@ public class SessionProxyServer {
                 if (mojangResponse != null && !mojangResponse.isEmpty()) {
                     JsonObject profile = gson.fromJson(mojangResponse, JsonObject.class);
                     database.cacheAuthentication(username, ip, profile);
-                    logger.info("Successfully authenticated " + username + " via Mojang");
+                    platform.sendLogMessage("Successfully authenticated " + username + " via Mojang");
                 }
 
                 sendResponse(exchange, 200, mojangResponse);
                 return;
 
             } catch (Exception e) {
-                logger.warning("Mojang authentication failed for " + username + ": " + e.getMessage());
+                platform.sendWarningLogMessage("Mojang authentication failed for " + username + ": " + e.getMessage());
 
                 // Fall back to local database
                 if (config.isFallbackEnabled()) {
                     String fallbackResponse = database.getFallbackAuth(username, ip, config.getMaxOfflineHours());
 
                     if (fallbackResponse != null) {
-                        logger.warning("Using FALLBACK authentication for " + username);
+                        platform.sendWarningLogMessage("Using FALLBACK authentication for " + username);
                         sendResponse(exchange, 200, fallbackResponse);
                         return;
                     } else {
-                        logger.warning("Fallback authentication failed for " + username + " - no cached data or IP mismatch");
+                        platform.sendWarningLogMessage("Fallback authentication failed for " + username + " - no cached data or IP mismatch");
                     }
                 }
 
@@ -102,7 +105,7 @@ public class SessionProxyServer {
             }
 
         } catch (Exception e) {
-            logger.severe("Error handling hasJoined: " + e.getMessage());
+            platform.sendSevereLogMessage("Error handling hasJoined: " + e.getMessage());
             e.printStackTrace();
             sendResponse(exchange, 500, "Internal server error");
         }
@@ -116,13 +119,13 @@ public class SessionProxyServer {
             sendResponse(exchange, response != null ? 204 : 500, response != null ? "" : "Failed");
 
         } catch (Exception e) {
-            logger.warning("Error forwarding join request: " + e.getMessage());
+            platform.sendWarningLogMessage("Error forwarding join request: " + e.getMessage());
             sendResponse(exchange, 500, "Internal server error");
         }
     }
 
     private String forwardToMojang(String endpoint, String query) throws IOException {
-        URL url = new URL(MOJANG_SESSION_SERVER + endpoint + "?" + query);
+        URL url = new URL(upstreamSessionServer + endpoint + "?" + query);
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setRequestMethod("GET");
         conn.setConnectTimeout(MOJANG_TIMEOUT_MS);
@@ -139,7 +142,7 @@ public class SessionProxyServer {
     }
 
     private String forwardToMojangPost(String endpoint, String body) throws IOException {
-        URL url = new URL(MOJANG_SESSION_SERVER + endpoint);
+        URL url = new URL(upstreamSessionServer + endpoint);
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setRequestMethod("POST");
         conn.setDoOutput(true);

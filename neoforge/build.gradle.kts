@@ -1,4 +1,8 @@
 import net.neoforged.nfrtgradle.CreateMinecraftArtifacts
+dependencies {
+    implementation(libs.h2)
+}
+
 neoForge {
     version = libs.versions.neo.get()
 
@@ -13,6 +17,7 @@ neoForge {
         }
     }
 }
+
 modrinth {
     uploadFile.set(tasks.jar)
     gameVersions.addAll(libs.versions.minecraft.get())
@@ -39,6 +44,7 @@ configurations {
 
 tasks.register<Copy>("copyCommonSources") {
     from("$rootDir/common/src/main/java") {
+        exclude("me/gamerduck/${project.property("modid")}/reflection/**")
         into("common/java")
     }
     from("$rootDir/common/src/main/resources") {

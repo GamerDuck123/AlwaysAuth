@@ -1,35 +1,77 @@
 package me.gamerduck.alwaysauth.api;
-import com.google.gson.JsonObject;
+
 import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import me.gamerduck.alwaysauth.Platform;
 
 import java.io.File;
 import java.sql.*;
-import java.util.logging.Logger;
 
 public class AuthDatabase {
     private Connection connection;
-    private final Logger logger;
+    private final Platform platform;
     private final Gson gson;
+    private final boolean isRemote;
 
-    public AuthDatabase(File dbFile, Logger logger) {
-        this.logger = logger;
+    public AuthDatabase(File dbFile, Platform platform) {
+        this.platform = platform;
         this.gson = new Gson();
+        this.isRemote = false;
 
         try {
-            // Load SQLite JDBC driver
-            Class.forName("org.sqlite.JDBC");
+            // Use H2 instead of SQLite
+            Class.forName("org.h2.Driver");
 
-            // Create database connection
-            String url = "jdbc:sqlite:" + dbFile.getAbsolutePath();
-            connection = DriverManager.getConnection(url);
+            // Create a file-based H2 database (auto-creates .mv.db file)
+            String url = "jdbc:h2:file:" + dbFile.getAbsolutePath().replace("\\", "/") + ";AUTO_SERVER=TRUE;MODE=MySQL";
 
-            // Initialize tables
+            connection = DriverManager.getConnection(url, "sa", "");
+
             initializeTables();
 
-            logger.info("Database initialized at: " + dbFile.getAbsolutePath());
+            platform.sendLogMessage("H2 database initialized at: " + dbFile.getAbsolutePath() + ".mv.db");
 
         } catch (Exception e) {
-            logger.severe("Failed to initialize database: " + e.getMessage());
+            platform.sendSevereLogMessage("Failed to initialize H2 database: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    public AuthDatabase(String host, int port, String database, String username, String password, String dbType, Platform platform) {
+        this.platform = platform;
+        this.gson = new Gson();
+        this.isRemote = true;
+
+        try {
+            String url;
+            String driverClass;
+
+            url = switch (dbType.toLowerCase()) {
+                case "mysql" -> {
+                    driverClass = "com.mysql.cj.jdbc.Driver";
+                    yield "jdbc:mysql://" + host + ":" + port + "/" + database + "?autoReconnect=true&useSSL=false";
+                }
+                case "mariadb" -> {
+                    driverClass = "org.mariadb.jdbc.Driver";
+                    yield "jdbc:mariadb://" + host + ":" + port + "/" + database;
+                }
+                case "postgresql" -> {
+                    driverClass = "org.postgresql.Driver";
+                    yield "jdbc:postgresql://" + host + ":" + port + "/" + database;
+                }
+                default ->
+                        throw new IllegalArgumentException("Unsupported database type: " + dbType + ". Supported types: mysql, mariadb, postgresql");
+            };
+
+            Class.forName(driverClass);
+            connection = DriverManager.getConnection(url, username, password);
+
+            initializeTables();
+
+            platform.sendLogMessage("Remote database connection established to " + host + ":" + port + "/" + database);
+
+        } catch (Exception e) {
+            platform.sendSevereLogMessage("Failed to initialize remote database: " + e.getMessage());
             e.printStackTrace();
         }
     }
@@ -37,10 +79,10 @@ public class AuthDatabase {
     private void initializeTables() throws SQLException {
         String createTable = """
             CREATE TABLE IF NOT EXISTS player_auth (
-                username TEXT PRIMARY KEY COLLATE NOCASE,
-                uuid TEXT NOT NULL,
-                last_ip TEXT NOT NULL,
-                last_seen INTEGER NOT NULL,
+                username VARCHAR(16) PRIMARY KEY,
+                uuid VARCHAR(36) NOT NULL,
+                last_ip VARCHAR(45) NOT NULL,
+                last_seen BIGINT NOT NULL,
                 profile_data TEXT NOT NULL
             )
         """;
@@ -58,10 +100,22 @@ public class AuthDatabase {
             String profileJson = gson.toJson(profile);
             long timestamp = System.currentTimeMillis();
 
-            String sql = """
-                INSERT OR REPLACE INTO player_auth (username, uuid, last_ip, last_seen, profile_data)
-                VALUES (?, ?, ?, ?, ?)
-            """;
+            String sql;
+            if (isRemote) {
+                sql = """
+                    INSERT INTO player_auth (username, uuid, last_ip, last_seen, profile_data)
+                    VALUES (?, ?, ?, ?, ?)
+                    ON DUPLICATE KEY UPDATE uuid = VALUES(uuid), last_ip = VALUES(last_ip),
+                    last_seen = VALUES(last_seen), profile_data = VALUES(profile_data)
+                """;
+            } else {
+                // H2 supports MERGE which works like "INSERT OR REPLACE"
+                sql = """
+                    MERGE INTO player_auth (username, uuid, last_ip, last_seen, profile_data)
+                    KEY (username)
+                    VALUES (?, ?, ?, ?, ?)
+                """;
+            }
 
             try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
                 pstmt.setString(1, username);
@@ -72,10 +126,10 @@ public class AuthDatabase {
                 pstmt.executeUpdate();
             }
 
-            logger.info("Cached authentication for " + username + " (IP: " + ip + ")");
+            platform.sendLogMessage("Cached authentication for " + username + " (IP: " + ip + ")");
 
         } catch (SQLException e) {
-            logger.warning("Failed to cache authentication: " + e.getMessage());
+            platform.sendWarningLogMessage("Failed to cache authentication: " + e.getMessage());
         }
     }
 
@@ -86,7 +140,7 @@ public class AuthDatabase {
             String sql = """
                 SELECT profile_data, last_ip, last_seen
                 FROM player_auth
-                WHERE username = ? COLLATE NOCASE
+                WHERE LOWER(username) = LOWER(?)
             """;
 
             try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
@@ -98,17 +152,15 @@ public class AuthDatabase {
                         long lastSeen = rs.getLong("last_seen");
                         String profileData = rs.getString("profile_data");
 
-                        // Check IP match (basic security)
                         if (ip != null && !ip.equals("unknown") && !ip.equals(cachedIp)) {
-                            logger.warning("IP mismatch for " + username + " - cached: " + cachedIp + ", current: " + ip);
+                            platform.sendWarningLogMessage("IP mismatch for " + username + " - cached: " + cachedIp + ", current: " + ip);
                             return null;
                         }
 
-                        // Check time limit (medium security)
                         if (maxOfflineHours > 0) {
                             long hoursSinceLastSeen = (System.currentTimeMillis() - lastSeen) / (1000 * 60 * 60);
                             if (hoursSinceLastSeen > maxOfflineHours) {
-                                logger.warning("Auth cache expired for " + username + " - last seen " + hoursSinceLastSeen + " hours ago");
+                                platform.sendWarningLogMessage("Auth cache expired for " + username + " - last seen " + hoursSinceLastSeen + " hours ago");
                                 return null;
                             }
                         }
@@ -119,7 +171,7 @@ public class AuthDatabase {
             }
 
         } catch (SQLException e) {
-            logger.warning("Database error during fallback auth: " + e.getMessage());
+            platform.sendWarningLogMessage("Database error during fallback auth: " + e.getMessage());
         }
 
         return null;
@@ -153,7 +205,7 @@ public class AuthDatabase {
             }
 
         } catch (SQLException e) {
-            logger.warning("Failed to get stats: " + e.getMessage());
+            platform.sendWarningLogMessage("Failed to get stats: " + e.getMessage());
         }
 
         return stats;
@@ -167,12 +219,12 @@ public class AuthDatabase {
             try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
                 pstmt.setLong(1, cutoffTime);
                 int deleted = pstmt.executeUpdate();
-                logger.info("Cleaned " + deleted + " old entries (older than " + daysOld + " days)");
+                platform.sendLogMessage("Cleaned " + deleted + " old entries (older than " + daysOld + " days)");
                 return deleted;
             }
 
         } catch (SQLException e) {
-            logger.warning("Failed to clean old entries: " + e.getMessage());
+            platform.sendWarningLogMessage("Failed to clean old entries: " + e.getMessage());
             return 0;
         }
     }
@@ -181,10 +233,10 @@ public class AuthDatabase {
         try {
             if (connection != null && !connection.isClosed()) {
                 connection.close();
-                logger.info("Database connection closed");
+                platform.sendLogMessage("Database connection closed");
             }
         } catch (SQLException e) {
-            logger.warning("Error closing database: " + e.getMessage());
+            platform.sendWarningLogMessage("Error closing database: " + e.getMessage());
         }
     }
 

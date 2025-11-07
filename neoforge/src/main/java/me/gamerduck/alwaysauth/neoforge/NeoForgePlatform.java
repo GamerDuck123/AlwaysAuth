@@ -1,18 +1,18 @@
-package me.gamerduck.alwaysauth.fabric;
+package me.gamerduck.alwaysauth.neoforge;
 
+import com.mojang.logging.LogUtils;
 import me.gamerduck.alwaysauth.Platform;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-public class FabricPlatform extends Platform<CommandSourceStack> {
+public class NeoForgePlatform extends Platform<CommandSourceStack> {
 
-    public static final Logger LOGGER = LoggerFactory.getLogger("alwaysauth");
+    public static final Logger LOGGER = LogUtils.getLogger();
     private MinecraftServer minecraftServer;
 
-    public FabricPlatform(MinecraftServer minecraftServer) {
+    public NeoForgePlatform(MinecraftServer minecraftServer) {
         super(minecraftServer.getServerDirectory().resolve("config/AlwaysAuth"));
     }
 

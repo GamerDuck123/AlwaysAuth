@@ -72,6 +72,12 @@ public class AlwaysAuthMod implements ModInitializer {
                 }
             }
         });
+
+        ServerLifecycleEvents.SERVER_STOPPING.register(server -> {
+            if (server.isDedicatedServer()) {
+                fabricPlatform.onDisable();
+            }
+        });
     }
 
 }

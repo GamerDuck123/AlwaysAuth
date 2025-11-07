@@ -8,11 +8,12 @@ dependencies {
     modImplementation(libs.fabric.loader)
     modImplementation("${libs.fabric.api.get()}+${libs.versions.minecraft.get()}")
 
+    implementation(libs.authlib)
 
-    implementation("org.xerial:sqlite-jdbc:3.45.0.0")
-    include("org.xerial:sqlite-jdbc:3.45.0.0")
-    implementation("com.google.code.gson:gson:2.10.1")
-    include("com.google.code.gson:gson:2.10.1")
+    implementation(libs.h2)
+    include(libs.h2)
+    implementation(libs.gson)
+    include(libs.gson)
 }
 
 modrinth {
@@ -35,6 +36,7 @@ tasks.register("publishCurseForge", net.darkhax.curseforgegradle.TaskPublishCurs
 
 tasks.register<Copy>("copyCommonSources") {
     from("$rootDir/common/src/main/java") {
+        exclude("me/gamerduck/${project.property("modid")}/reflection/**")
         into("common/java")
     }
 

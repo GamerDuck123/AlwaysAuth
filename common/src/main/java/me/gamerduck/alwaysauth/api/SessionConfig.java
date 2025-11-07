@@ -1,5 +1,7 @@
 package me.gamerduck.alwaysauth.api;
 
+import me.gamerduck.alwaysauth.Platform;
+
 import java.io.*;
 import java.util.Properties;
 import java.util.logging.Logger;
@@ -10,7 +12,7 @@ import java.util.logging.Logger;
 public class SessionConfig {
     private final Properties properties;
     private final File configFile;
-    private final Logger logger;
+    private final Platform platform;
 
     // Default values
     private static final int DEFAULT_PORT = 8765;
@@ -18,12 +20,21 @@ public class SessionConfig {
     private static final int DEFAULT_MAX_OFFLINE_HOURS = 72; // 3 days
     private static final int DEFAULT_CLEANUP_DAYS = 30;
 
-    public SessionConfig(File dataFolder, Logger logger) {
-        this.logger = logger;
+    private static final String DEFAULT_DB_TYPE = "sqlite";
+    private static final String DEFAULT_DB_HOST = "localhost";
+    private static final int DEFAULT_DB_PORT_MYSQL = 3306;
+    private static final int DEFAULT_DB_PORT_POSTGRESQL = 5432;
+    private static final String DEFAULT_DB_NAME = "minecraft";
+    private static final String DEFAULT_DB_USERNAME = "root";
+    private static final String DEFAULT_DB_PASSWORD = "";
+
+    private static final String DEFAULT_UPSTREAM_SESSION_SERVER = "https://sessionserver.mojang.com";
+
+    public SessionConfig(File dataFolder, Platform platform) {
         this.configFile = new File(dataFolder, "config.properties");
+        this.platform = platform;
         this.properties = new Properties();
 
-        // Create data folder if needed
         if (!dataFolder.exists()) {
             dataFolder.mkdirs();
         }
@@ -35,9 +46,9 @@ public class SessionConfig {
         if (configFile.exists()) {
             try (FileInputStream fis = new FileInputStream(configFile)) {
                 properties.load(fis);
-                logger.info("Configuration loaded from " + configFile.getName());
+                platform.sendLogMessage("Configuration loaded from " + configFile.getName());
             } catch (IOException e) {
-                logger.warning("Failed to load config, using defaults: " + e.getMessage());
+                platform.sendSevereLogMessage("Failed to load config, using defaults: " + e.getMessage());
                 setDefaults();
             }
         } else {
@@ -52,14 +63,22 @@ public class SessionConfig {
         properties.setProperty("max-offline-hours", String.valueOf(DEFAULT_MAX_OFFLINE_HOURS));
         properties.setProperty("cleanup-days", String.valueOf(DEFAULT_CLEANUP_DAYS));
         properties.setProperty("security-level", "basic");
+        properties.setProperty("upstream-server", "https://sessionserver.mojang.com");
+
+        properties.setProperty("database.type", DEFAULT_DB_TYPE);
+        properties.setProperty("database.host", DEFAULT_DB_HOST);
+        properties.setProperty("database.port", String.valueOf(DEFAULT_DB_PORT_MYSQL));
+        properties.setProperty("database.name", DEFAULT_DB_NAME);
+        properties.setProperty("database.username", DEFAULT_DB_USERNAME);
+        properties.setProperty("database.password", DEFAULT_DB_PASSWORD);
     }
 
     public void saveConfig() {
         try (FileOutputStream fos = new FileOutputStream(configFile)) {
             properties.store(fos, "Session Fallback Configuration");
-            logger.info("Configuration saved to " + configFile.getName());
+            platform.sendLogMessage("Configuration saved to " + configFile.getName());
         } catch (IOException e) {
-            logger.warning("Failed to save config: " + e.getMessage());
+            platform.sendSevereLogMessage("Failed to save config: " + e.getMessage());
         }
     }
 
@@ -77,6 +96,14 @@ public class SessionConfig {
             return 0;
         }
         return Integer.parseInt(properties.getProperty("max-offline-hours", String.valueOf(DEFAULT_MAX_OFFLINE_HOURS)));
+    }
+
+    public String getUpstreamSessionServer() {
+        return properties.getProperty("upstream-server", DEFAULT_UPSTREAM_SESSION_SERVER);
+    }
+
+    public void setUpstreamSessionServer(String server) {
+        properties.setProperty("upstream-server", server);
     }
 
     public int getCleanupDays() {
@@ -113,6 +140,63 @@ public class SessionConfig {
         return "http://127.0.0.1:" + getPort();
     }
 
+    public String getDatabaseType() {
+        return properties.getProperty("database.type", DEFAULT_DB_TYPE);
+    }
+
+    public String getDatabaseHost() {
+        return properties.getProperty("database.host", DEFAULT_DB_HOST);
+    }
+
+    public int getDatabasePort() {
+        String dbType = getDatabaseType();
+        int defaultPort = dbType.equalsIgnoreCase("postgresql") ? DEFAULT_DB_PORT_POSTGRESQL : DEFAULT_DB_PORT_MYSQL;
+        return Integer.parseInt(properties.getProperty("database.port", String.valueOf(defaultPort)));
+    }
+
+    public String getDatabaseName() {
+        return properties.getProperty("database.name", DEFAULT_DB_NAME);
+    }
+
+    public String getDatabaseUsername() {
+        return properties.getProperty("database.username", DEFAULT_DB_USERNAME);
+    }
+
+    public String getDatabasePassword() {
+        return properties.getProperty("database.password", DEFAULT_DB_PASSWORD);
+    }
+
+    public void setDatabaseType(String type) {
+        if ("sqlite".equalsIgnoreCase(type) || "mysql".equalsIgnoreCase(type) ||
+                "mariadb".equalsIgnoreCase(type) || "postgresql".equalsIgnoreCase(type)) {
+            properties.setProperty("database.type", type.toLowerCase());
+        }
+    }
+
+    public void setDatabaseHost(String host) {
+        properties.setProperty("database.host", host);
+    }
+
+    public void setDatabasePort(int port) {
+        properties.setProperty("database.port", String.valueOf(port));
+    }
+
+    public void setDatabaseName(String name) {
+        properties.setProperty("database.name", name);
+    }
+
+    public void setDatabaseUsername(String username) {
+        properties.setProperty("database.username", username);
+    }
+
+    public void setDatabasePassword(String password) {
+        properties.setProperty("database.password", password);
+    }
+
+    public boolean isRemoteDatabase() {
+        return !getDatabaseType().equalsIgnoreCase("sqlite");
+    }
+
     @Override
     public String toString() {
         return "SessionConfig{" +
@@ -121,6 +205,9 @@ public class SessionConfig {
                 ", securityLevel=" + getSecurityLevel() +
                 ", maxOfflineHours=" + getMaxOfflineHours() +
                 ", cleanupDays=" + getCleanupDays() +
+                ", databaseType=" + getDatabaseType() +
+                ", databaseHost=" + getDatabaseHost() +
+                ", databasePort=" + getDatabasePort() +
                 '}';
     }
 }

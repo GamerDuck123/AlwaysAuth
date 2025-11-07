@@ -3,6 +3,8 @@
   "package": "${group}.mixin.mixins",
   "compatibilityLevel": "JAVA_17",
   "mixins": [
+    "AuthenticationURLReplacer",
+    "ServerPropertiesReplacer"
   ],
   "injectors": {
     "defaultRequire": 1

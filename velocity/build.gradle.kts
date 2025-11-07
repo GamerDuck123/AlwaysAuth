@@ -3,6 +3,8 @@ import io.papermc.hangarpublishplugin.model.Platforms
 dependencies {
     compileOnly(libs.velocity)
     annotationProcessor(libs.velocity)
+
+    implementation(libs.h2)
 }
 
 modrinth {
@@ -34,6 +36,7 @@ hangarPublish {
 tasks.register<Copy>("copyCommonSources") {
     from("$rootDir/common/src/main/java") {
         exclude("me/gamerduck/${project.property("modid")}/mixin/**")
+        exclude("me/gamerduck/${project.property("modid")}/reflection/**")
         into("common/java")
     }
     from("$rootDir/common/src/main/resources") {
@@ -80,4 +83,13 @@ tasks {
     processResources {
         dependsOn("copyCommonSources")
     }
+    build {
+        dependsOn("shadowJar")
+    }
+}
+
+tasks.named<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("shadowJar") {
+    archiveClassifier.set("") // optional: overwrite default jar name
+    relocate("org.h2", "me.gamerduck.alwaysauth.libs.h2")
+    mergeServiceFiles()
 }

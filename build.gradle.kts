@@ -37,15 +37,8 @@ allprojects {
             apply(plugin = "curseforge-plugin")
         }
 
-
-        // Find a way to bundle spigot and bungeecord into the same jar maybe?
         if (this.name == "spigot") {
             apply(plugin = "spigot-plugin")
-            apply(plugin = "modrinth-plugin")
-        }
-
-        if (this.name == "bungeecord") {
-            apply(plugin = "bungeecord-plugin")
             apply(plugin = "modrinth-plugin")
         }
 
