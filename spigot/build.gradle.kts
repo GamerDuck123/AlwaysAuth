@@ -6,11 +6,6 @@ dependencies {
     implementation(libs.authlib)
 }
 
-modrinth {
-    uploadFile.set(tasks.shadowJar)
-    gameVersions.addAll(libs.versions.minecraft.get())
-}
-
 tasks.register<Copy>("copyCommonSources") {
     from("$rootDir/common/src/main/java") {
         exclude("me/gamerduck/${project.property("modid")}/mixin/**")
@@ -23,18 +18,6 @@ tasks.register<Copy>("copyCommonSources") {
         exclude("${project.property("modid")}.mixins.json")
         into("common/resources")
     }
-//    Fill in default config from commons
-//    from("$rootDir/common/src/main/resources/templates") {
-//        include("${project.property("modid")}.properties")
-//        into("common/resources")
-//        includeEmptyDirs = false
-//
-//        filesMatching("**/${project.property("modid")}.properties") {
-//            expand(mapOf(
-//                "default_path" to "plugins/${project.name}/storage",
-//            ))
-//        }
-//    }
 
     into("${layout.buildDirectory}/generated/sources")
 }

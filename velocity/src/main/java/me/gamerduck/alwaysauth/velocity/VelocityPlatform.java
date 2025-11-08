@@ -1,15 +1,11 @@
 package me.gamerduck.alwaysauth.velocity;
 
-import com.mojang.brigadier.Command;
-import com.velocitypowered.api.command.BrigadierCommand;
-import com.velocitypowered.api.command.CommandManager;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.proxy.ProxyServer;
 import me.gamerduck.alwaysauth.Platform;
 import me.gamerduck.alwaysauth.velocity.reflection.VelocityConfigurationChanger;
 import me.gamerduck.alwaysauth.velocity.reflection.VelocitySessionServerChanger;
 import net.kyori.adventure.text.Component;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.nio.file.Path;
 import java.util.logging.Logger;
@@ -17,7 +13,6 @@ import java.util.logging.Logger;
 public class VelocityPlatform extends Platform<CommandSource> {
 
     private final ProxyServer server;
-//    private final Logger logger;
 
     public VelocityPlatform(ProxyServer server, Logger logger, Path dataDirectory) {
         super(dataDirectory);

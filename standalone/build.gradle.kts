@@ -1,11 +1,17 @@
 dependencies {
-    paperweight.paperDevBundle("${libs.versions.minecraft.get()}-R0.1-SNAPSHOT")
-    compileOnly(libs.brigadier)
+    implementation(libs.authlib)
+
+    implementation(libs.h2)
+    implementation(libs.gson)
+    implementation(libs.mysql)
+    implementation(libs.mariadb)
+    implementation(libs.postgres)
 }
 
 tasks.register<Copy>("copyCommonSources") {
     from("$rootDir/common/src/main/java") {
         exclude("me/gamerduck/${project.property("modid")}/mixin/**")
+        exclude("me/gamerduck/${project.property("modid")}/reflection/**")
         into("common/java")
     }
     from("$rootDir/common/src/main/resources") {
@@ -15,6 +21,7 @@ tasks.register<Copy>("copyCommonSources") {
         exclude("${project.property("modid")}.mixins.json")
         into("common/resources")
     }
+
     into("${layout.buildDirectory}/generated/sources")
 }
 
@@ -34,29 +41,22 @@ tasks.named<JavaCompile>("compileJava") {
 }
 
 tasks {
-    assemble {
-        dependsOn(reobfJar)
-    }
     processResources {
         dependsOn("copyCommonSources")
-        val props = mapOf(
-            "name" to rootProject.name,
-            "group" to project.group,
-            "version" to project.version,
-            "mainFile" to "${rootProject.name}Plugin",
-            "description" to project.description,
-            "apiVersion" to libs.versions.minecraft.get()
-        )
-
-        from("src/main/templates") {
-            listOf(
-                "paper-plugin.yml",
-            ).forEach {
-                filesMatching(it) {
-                    expand(props)
-                }
-            }
-        }
-        into(layout.buildDirectory.dir("src/main/resources"))
     }
+    jar {
+        manifest {
+            attributes(
+                "Main-Class" to "me.gamerduck.alwaysauth.AlwaysAuthMain"
+            )
+        }
+    }
+    build {
+        dependsOn("shadowJar")
+    }
+}
+
+tasks.named<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("shadowJar") {
+    archiveClassifier.set("")
+    mergeServiceFiles()
 }

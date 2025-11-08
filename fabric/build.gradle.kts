@@ -16,24 +16,6 @@ dependencies {
     include(libs.gson)
 }
 
-modrinth {
-    uploadFile.set(project.tasks.remapJar)
-    gameVersions.addAll(libs.versions.minecraft.get())
-}
-
-tasks.register("publishCurseForge", net.darkhax.curseforgegradle.TaskPublishCurseForge::class) {
-    apiToken = System.getenv("CURSEFORGE_TOKEN")
-
-    val projectId = findProperty("curseforgeID") as String?
-
-    val mainFile = upload(projectId, project.tasks.remapJar)
-    mainFile.addModLoader("Fabric")
-    mainFile.addGameVersion(libs.versions.minecraft.get())
-    mainFile.releaseType = property("versionType") as String
-    mainFile.displayName = "${project.version as String}-${project.name}"
-    mainFile.changelog = rootProject.file("CHANGELOG.md").readText()
-}
-
 tasks.register<Copy>("copyCommonSources") {
     from("$rootDir/common/src/main/java") {
         exclude("me/gamerduck/${project.property("modid")}/reflection/**")

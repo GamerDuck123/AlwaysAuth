@@ -55,10 +55,6 @@ public class AuthDatabase {
                     driverClass = "org.mariadb.jdbc.Driver";
                     yield "jdbc:mariadb://" + host + ":" + port + "/" + database;
                 }
-                case "postgresql" -> {
-                    driverClass = "org.postgresql.Driver";
-                    yield "jdbc:postgresql://" + host + ":" + port + "/" + database;
-                }
                 default ->
                         throw new IllegalArgumentException("Unsupported database type: " + dbType + ". Supported types: mysql, mariadb, postgresql");
             };

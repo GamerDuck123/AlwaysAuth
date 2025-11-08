@@ -23,17 +23,17 @@ public class FabricPlatform extends Platform<CommandSourceStack> {
 
     @Override
     public void sendLogMessage(String msg) {
-        LOGGER.info(msg);
+        LOGGER.info(msg.replaceAll("§.", ""));
     }
 
     @Override
     public void sendSevereLogMessage(String msg) {
-        LOGGER.error(msg);
+        LOGGER.error(msg.replaceAll("§.", ""));
     }
 
     @Override
     public void sendWarningLogMessage(String msg) {
-        LOGGER.warn(msg);
+        LOGGER.warn(msg.replaceAll("§.", ""));
     }
 
 }

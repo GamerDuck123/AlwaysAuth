@@ -25,6 +25,6 @@ file="META-INF/accesstransformer.cfg"
 [[dependencies.${modid}]]
     modId="minecraft"
     type="required"
-    versionRange="[${minecraftVersionRange}]"
+    versionRange="[${minecraftVersion},)"
     ordering="NONE"
     side="BOTH"

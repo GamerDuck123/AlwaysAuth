@@ -70,4 +70,56 @@ AlwaysAuth provides a flexible configuration file where you can:
 * Enable or disable specific fallback methods.
 * Set up remote databases for cross-server authentication.
 * Choose between different security modes.
----
+
+```properties
+###################################
+#                                 #
+#    Always Auth Configuration    #
+#                                 #
+###################################
+
+# The ip for the session server
+# If set anything other than 127.0.0.1 or 0.0.0.0 (allows public access), it will treat as external server
+# An external server means only port needs to be set (to match that external server) and it will use that to authenticate.
+# Please note as of right now you will not see console logs on the server if you are using an external server
+ip-address=0.0.0.0
+
+# Port for the session server
+port=20049
+
+# Enable session fallback when Mojang servers are down
+fallback-enabled=true
+
+# Maximum hours a player can stay offline before requiring re-authentication (0 = always require)
+max-offline-hours=72
+
+# Days before old session data is cleaned up
+cleanup-days=30
+
+# Security level: 'basic' (always verify) or 'medium' (use max-offline-hours)
+security-level=basic
+
+# Upstream Session Server URL
+# Default is Mojang's official one but this option is here to work with things like minehut's external servers
+upstream-server=https\://sessionserver.mojang.com
+
+# Database type: h2, mysql, or mariadb
+database.type=h2
+
+# Database host (not used for H2)
+database.host=localhost
+
+# Database port (not used for H2)
+database.port=3306
+
+# Database name (The file name for H2)
+database.name=minecraft
+
+# Database username (not used for H2)
+database.username=root
+
+# Database password (not used for H2)
+database.password=
+
+
+```

@@ -18,24 +18,6 @@ neoForge {
     }
 }
 
-modrinth {
-    uploadFile.set(tasks.jar)
-    gameVersions.addAll(libs.versions.minecraft.get())
-}
-
-tasks.register("publishCurseForge", net.darkhax.curseforgegradle.TaskPublishCurseForge::class) {
-    apiToken = System.getenv("CURSEFORGE_TOKEN")
-
-    val projectId = findProperty("curseforgeID") as String?
-
-    val mainFile = upload(projectId, tasks.jar)
-    mainFile.addModLoader("NeoForge")
-    mainFile.addGameVersion(libs.versions.minecraft.get())
-    mainFile.releaseType = property("versionType") as String
-    mainFile.displayName = "${project.version as String}-${project.name}"
-    mainFile.changelog = rootProject.file("CHANGELOG.md").readText()
-}
-
 val localRuntime: Configuration by configurations.creating
 configurations {
     runtimeClasspath.get().extendsFrom(localRuntime)
@@ -57,19 +39,6 @@ tasks.register<Copy>("copyCommonSources") {
             ))
         }
     }
-
-//    Fill in default config from commons
-//    from("$rootDir/common/src/main/resources/templates") {
-//        include("${project.property("modid")}.properties")
-//        into("common/resources")
-//        includeEmptyDirs = false
-//
-//        filesMatching("**/${project.property("modid")}.properties") {
-//            expand(mapOf(
-//                "default_path" to "plugins/${project.name}/storage",
-//            ))
-//        }
-//    }
 
     into("${layout.buildDirectory}/generated/sources")
 }

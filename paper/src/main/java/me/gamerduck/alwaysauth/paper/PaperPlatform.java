@@ -58,17 +58,17 @@ public class PaperPlatform extends Platform<CommandSourceStack> {
 
     @Override
     public void sendLogMessage(String msg) {
-        LOGGER.info(msg);
+        LOGGER.info(msg.replaceAll("§.", ""));
     }
 
     @Override
     public void sendSevereLogMessage(String msg) {
-        LOGGER.severe(msg);
+        LOGGER.severe(msg.replaceAll("§.", ""));
     }
 
     @Override
     public void sendWarningLogMessage(String msg) {
-        LOGGER.warning(msg);
+        LOGGER.warning(msg.replaceAll("§.", ""));
     }
 
 }

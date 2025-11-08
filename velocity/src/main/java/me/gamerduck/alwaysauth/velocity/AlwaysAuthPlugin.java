@@ -14,8 +14,8 @@ import com.velocitypowered.api.proxy.ProxyServer;
 import java.nio.file.Path;
 import java.util.logging.Logger;
 
-@Plugin(id = "alwaysauth", name = "AlwaysAuth", version = "0.1.0-SNAPSHOT",
-        url = "https://example.org", description = "I did it!", authors = {"GamerDuck123"})
+@Plugin(id = "alwaysauth", name = "AlwaysAuth", version = "0.0.1",
+        url = "https://github.com/GamerDuck123/AlwaysAuth", description = "Keep your server always online even when mojang isn't!", authors = {"GamerDuck123"})
 public class AlwaysAuthPlugin {
 
     private final ProxyServer server;

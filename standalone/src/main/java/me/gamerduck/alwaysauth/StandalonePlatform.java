@@ -12,13 +12,13 @@ public class StandalonePlatform extends Platform<PrintStream>{
 
         Scanner scanner = new Scanner(System.in);
 
-        // Command loop
         while (true) {
             System.out.print("> ");
             String input = scanner.nextLine().trim();
 
             if (input.equalsIgnoreCase("exit")
-                    || input.equalsIgnoreCase("quit")) {
+                    || input.equalsIgnoreCase("quit")
+                    || input.equalsIgnoreCase("stop")) {
                 System.out.println("Shutting down...");
                 break;
             }
@@ -43,6 +43,7 @@ public class StandalonePlatform extends Platform<PrintStream>{
         }
 
         scanner.close();
+        System.exit(0);
     }
 
     @Override
@@ -57,7 +58,7 @@ public class StandalonePlatform extends Platform<PrintStream>{
 
     @Override
     public void sendSevereLogMessage(String msg) {
-        System.out.println("[ERROR] h" + msg.replaceAll("§.", ""));
+        System.out.println("[ERROR] " + msg.replaceAll("§.", ""));
     }
 
     @Override

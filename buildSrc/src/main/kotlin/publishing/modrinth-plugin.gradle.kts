@@ -8,15 +8,22 @@ modrinth {
         when (name) {
             "fabric" -> listOf("fabric", "babric", "quilt")
             "neoforge" -> listOf("neoforge")
-            "sponge" -> listOf("sponge")
             "paper" -> listOf("paper", "purpur")
             "spigot" -> listOf("spigot")
             "velocity" -> listOf("velocity")
-            "bungeecord" -> listOf("bungeecord")
-            "waterfall" -> listOf("waterfall")
             else -> throw IllegalStateException("Unknown loader $name")
         }
     )
+    uploadFile.set(when (name) {
+        "fabric" -> tasks.named<net.fabricmc.loom.task.RemapJarTask>("remapJar")
+        "neoforge" -> tasks.named<Jar>("jar")
+        "paper" -> tasks.named<Jar>("jar")
+        "spigot" -> tasks.named<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("shadowJar")
+        "velocity" -> tasks.named<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("shadowJar")
+        else -> throw IllegalStateException("Unknown loader $name")
+    })
+
+    gameVersions.addAll(rootProject.property("minecraft_version") as String)
     token.set(System.getenv("MODRINTH_TOKEN"))
     projectId.set(rootProject.property("modrinthID") as String)
     versionType.set(rootProject.property("versionType") as String)

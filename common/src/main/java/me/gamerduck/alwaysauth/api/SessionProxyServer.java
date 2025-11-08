@@ -38,7 +38,7 @@ public class SessionProxyServer {
         else this.database = new AuthDatabase(new File(dataFolder, "authcache.db"), platform);
         this.upstreamSessionServer = config.getUpstreamSessionServer();
 
-        this.server = HttpServer.create(new InetSocketAddress("0.0.0.0", port), 0);
+        this.server = HttpServer.create(new InetSocketAddress(config.getIpAddress(), port), 0);
         this.server.createContext("/session/minecraft/hasJoined", this::handleHasJoined);
         this.server.createContext("/session/minecraft/join", this::handleJoin);
         this.server.setExecutor(Executors.newVirtualThreadPerTaskExecutor());

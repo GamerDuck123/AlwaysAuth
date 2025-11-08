@@ -21,7 +21,8 @@ public abstract class Platform<CS> {
             config = new SessionConfig(platformFolder.toFile(), this);
             sendLogMessage("Configuration loaded: " + config);
 
-            if (config.getExternalIp().equalsIgnoreCase("http://127.0.0.1")) {
+            if (config.getIpAddress().equalsIgnoreCase("127.0.0.1")
+                    || config.getIpAddress().equalsIgnoreCase("0.0.0.0")) {
             proxyServer = new SessionProxyServer(
                     config.getPort(),
                     platformFolder.toFile(),

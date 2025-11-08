@@ -10,12 +10,10 @@ import java.util.logging.Logger;
 
 public class SpigotPlatform extends Platform<CommandSender> {
 
-    private final Logger LOGGER;
+    private static final Logger LOGGER = Logger.getLogger("AlwaysAuth");
 
     public SpigotPlatform(JavaPlugin bootstrap) {
         super(bootstrap.getDataFolder().toPath());
-
-        this.LOGGER = bootstrap.getLogger();
 
         AuthenticationURLReplacer.replaceSessionService(this, config().getSessionServerUrl());
         ServerPropertiesReplacer.forcePreventProxyConnections(this);
@@ -53,17 +51,17 @@ public class SpigotPlatform extends Platform<CommandSender> {
 
     @Override
     public void sendLogMessage(String msg) {
-        LOGGER.info(msg);
+        LOGGER.info(msg.replaceAll("§.", ""));
     }
 
     @Override
     public void sendSevereLogMessage(String msg) {
-        LOGGER.severe(msg);
+        LOGGER.severe(msg.replaceAll("§.", ""));
     }
 
     @Override
     public void sendWarningLogMessage(String msg) {
-        LOGGER.warning(msg);
+        LOGGER.warning(msg.replaceAll("§.", ""));
     }
 
 }
