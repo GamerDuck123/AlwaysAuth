@@ -6,9 +6,14 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import me.gamerduck.alwaysauth.Platform;
 
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
 import java.io.*;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.util.Base64;
 import java.util.concurrent.Executors;
 
 /**
@@ -17,6 +22,8 @@ import java.util.concurrent.Executors;
  */
 public class SessionProxyServer {
     private static final int UPSTREAM_TIMEOUT_MS = 3000;
+    private static final String HMAC_ALGORITHM = "HmacSHA256";
+    private static final long TOKEN_VALIDITY_MS = 86400000; // 24 hours
 
     private final HttpServer server;
     private final AuthDatabase database;
@@ -24,6 +31,7 @@ public class SessionProxyServer {
     private final SessionConfig config;
     private final Platform platform;
     private final String upstreamSessionServer;
+    private final Boolean debug;
 
     public AuthDatabase getDatabase() {
         return database;
@@ -33,17 +41,38 @@ public class SessionProxyServer {
         this.platform = platform;
         this.gson = new Gson();
         this.config = config;
-        if (config.isRemoteDatabase()) this.database = new AuthDatabase(config.getDatabaseHost(), config.getDatabasePort(),
-                config.getDatabaseName(), config.getDatabaseUsername(), config.getDatabasePassword(), config.getDatabaseType(), platform);
-        else this.database = new AuthDatabase(new File(dataFolder, "authcache.db"), platform);
+        this.debug = platform.isDebug();
+
+        if (config.isRemoteDatabase()) {
+            this.database = new AuthDatabase(
+                    config.getDatabaseHost(),
+                    config.getDatabasePort(),
+                    config.getDatabaseName(),
+                    config.getDatabaseUsername(),
+                    config.getDatabasePassword(),
+                    config.getDatabaseType(),
+                    platform
+            );
+        } else {
+            this.database = new AuthDatabase(new File(dataFolder, "authcache.db"), platform);
+        }
+
         this.upstreamSessionServer = config.getUpstreamSessionServer();
 
         this.server = HttpServer.create(new InetSocketAddress(config.getIpAddress(), port), 0);
-        this.server.createContext("/session/minecraft/hasJoined", this::handleHasJoined);
-        this.server.createContext("/session/minecraft/join", this::handleJoin);
+
+
+        if (config.isAuthenticationEnabled()) {
+            this.server.createContext("/auth", this::handleAuthPath);
+        } else {
+            // Only needed if authentication is disabled
+            this.server.createContext("/session/minecraft/hasJoined", this::handleHasJoined);
+            this.server.createContext("/session/minecraft/join", this::handleJoin);
+        }
         this.server.setExecutor(Executors.newVirtualThreadPerTaskExecutor());
 
         platform.sendLogMessage("Session proxy server created on port " + port);
+        platform.sendLogMessage("Authentication mode: " + (config.isAuthenticationEnabled() ? "ENABLED" : "DISABLED"));
     }
 
     public void start() {
@@ -55,6 +84,65 @@ public class SessionProxyServer {
         server.stop(0);
         database.close();
         platform.sendLogMessage("Session proxy server stopped");
+    }
+
+    private boolean verifyAuthToken(String providedToken) {
+        if (!config.isAuthenticationEnabled()) {
+            return true;
+        }
+
+        if (providedToken == null) {
+            return false;
+        }
+
+        // Check current token
+        String currentToken = config.getSecretKey();
+        if (providedToken.equals(currentToken)) {
+            return true;
+        }
+
+        return false;
+    }
+
+    private void handleAuthPath(HttpExchange exchange) throws IOException {
+        try {
+            // Get query string to extract token
+            String query = exchange.getRequestURI().getQuery();
+            String token = null;
+            String fullPath = null;
+
+            if (query != null) {
+                for (String param : query.split("&")) {
+                    String[] pair = param.split("=", 2);
+                    if (pair.length == 2 && "token".equals(pair[0])) {
+                        // Splitting at /session ensures that /sessio could be in a key, although very unlikely
+                        String[] pairAndPath = pair[1].split("/session", 2);
+                        token = URLDecoder.decode(pairAndPath[0], "UTF-8");
+                        fullPath = "/session" + pairAndPath[1];
+                        break;
+                    }
+                }
+            }
+
+            if (!verifyAuthToken(token)) {
+                platform.sendWarningLogMessage("Invalid or missing auth token");
+                sendResponse(exchange, 403, "Forbidden: Invalid authentication token");
+                return;
+            }
+
+            if (fullPath.startsWith("/session/minecraft/hasJoined")) {
+                handleHasJoined(exchange);
+            } else if (fullPath.startsWith("/session/minecraft/join")) {
+                handleJoin(exchange);
+            } else {
+                sendResponse(exchange, 404, "Not Found");
+            }
+
+        } catch (Exception e) {
+            platform.sendSevereLogMessage("Error handling auth path: " + e.getMessage());
+            e.printStackTrace();
+            sendResponse(exchange, 500, "Internal server error");
+        }
     }
 
     private void handleHasJoined(HttpExchange exchange) throws IOException {
@@ -71,7 +159,7 @@ public class SessionProxyServer {
                 return;
             }
 
-            platform.sendLogMessage("Authentication request for user: " + username + " (serverId: " + serverId + ")");
+            if (debug) platform.sendLogMessage("Authentication request for user: " + username + " (serverId: " + serverId + ")");
 
             try {
                 String upstreamResponse = forwardToUpstream("/session/minecraft/hasJoined", query);
@@ -79,7 +167,7 @@ public class SessionProxyServer {
                 if (upstreamResponse != null && !upstreamResponse.isEmpty()) {
                     JsonObject profile = gson.fromJson(upstreamResponse, JsonObject.class);
                     database.cacheAuthentication(username, ip, profile);
-                    platform.sendLogMessage("Successfully authenticated " + username + " via Upstream");
+                    if (debug) platform.sendLogMessage("Successfully authenticated " + username + " via Upstream");
                 }
 
                 sendResponse(exchange, 200, upstreamResponse);
@@ -100,7 +188,7 @@ public class SessionProxyServer {
                     }
                 }
 
-                sendResponse(exchange, 204, ""); // No content = authentication failed
+                sendResponse(exchange, 204, "");
             }
 
         } catch (Exception e) {
@@ -134,7 +222,7 @@ public class SessionProxyServer {
         if (responseCode == 200) {
             return readInputStream(conn.getInputStream());
         } else if (responseCode == 204) {
-            return ""; // No content means auth failed
+            return "";
         }
 
         throw new IOException("Upstream returned status: " + responseCode);
@@ -199,7 +287,6 @@ public class SessionProxyServer {
                 try {
                     params.put(pair[0], URLDecoder.decode(pair[1], "UTF-8"));
                 } catch (UnsupportedEncodingException e) {
-                    // UTF-8 is always supported
                 }
             }
         }
@@ -207,7 +294,7 @@ public class SessionProxyServer {
     }
 
     private static class QueryParams {
-        private final java.util.Map<String, String> params = new java.util.HashMap<>();
+        private final java.util.HashMap<String, String> params = new java.util.HashMap<>();
 
         void put(String key, String value) {
             params.put(key, value);

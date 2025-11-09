@@ -42,7 +42,7 @@ public class VelocityConfigurationChanger {
             long offset = unsafe.objectFieldOffset(preventProxyField);
             unsafe.putBoolean(configuration, offset, PREVENT_CLIENT_PROXY_VALUE);
 
-            platform.sendLogMessage("Successfully set preventClientProxyConnections to " + PREVENT_CLIENT_PROXY_VALUE);
+            if (platform.isDebug()) platform.sendLogMessage("Successfully set preventClientProxyConnections to " + PREVENT_CLIENT_PROXY_VALUE);
 
         } catch (Exception e) {
             platform.sendSevereLogMessage("Failed to modify Velocity configuration:");

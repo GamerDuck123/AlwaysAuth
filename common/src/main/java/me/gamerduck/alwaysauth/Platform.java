@@ -23,23 +23,23 @@ public abstract class Platform<CS> {
 
             if (config.getIpAddress().equalsIgnoreCase("127.0.0.1")
                     || config.getIpAddress().equalsIgnoreCase("0.0.0.0")) {
-            proxyServer = new SessionProxyServer(
-                    config.getPort(),
-                    platformFolder.toFile(),
-                    this,
-                    config
-            );
-            proxyServer.start();
+                proxyServer = new SessionProxyServer(
+                        config.getPort(),
+                        platformFolder.toFile(),
+                        this,
+                        config
+                );
+                proxyServer.start();
 
-//            if (System.getProperty("minecraft.api.session.host").equalsIgnoreCase(config.getSessionServerUrl())) {
-//                logger.warning("Could not automatically configure session server.");
-//                logger.warning("Please add this to your server JVM arguments:");
-//                logger.warning("-Dminecraft.api.session.host=" + config.getSessionServerUrl());
-//            }
+    //            if (System.getProperty("minecraft.api.session.host").equalsIgnoreCase(config.getSessionServerUrl())) {
+    //                logger.warning("Could not automatically configure session server.");
+    //                logger.warning("Please add this to your server JVM arguments:");
+    //                logger.warning("-Dminecraft.api.session.host=" + config.getSessionServerUrl());
+    //            }
 
-            sendLogMessage("AlwaysAuth enabled! Proxy running on port " + config.getPort());
-            sendLogMessage("Fallback mode: " + (config.isFallbackEnabled() ? "ENABLED" : "DISABLED"));
-            sendLogMessage("Security level: " + config.getSecurityLevel().toUpperCase());
+                sendLogMessage("AlwaysAuth enabled! Proxy running on port " + config.getPort());
+                sendLogMessage("Fallback mode: " + (config.isFallbackEnabled() ? "ENABLED" : "DISABLED"));
+                sendLogMessage("Security level: " + config.getSecurityLevel().toUpperCase());
             } else {
                 sendLogMessage("AlwaysAuth enabled! Using external domain " + config.getSessionServerUrl());
                 proxyServer = null;
@@ -60,6 +60,10 @@ public abstract class Platform<CS> {
             proxyServer.stop();
         }
         sendLogMessage("AlwaysAuth disabled");
+    }
+
+    public Boolean isDebug() {
+        return config.getDebug() || proxyServer == null;
     }
 
     public void cmdStatus(CS player) {

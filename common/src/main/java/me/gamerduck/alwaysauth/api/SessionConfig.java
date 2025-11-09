@@ -3,9 +3,8 @@ package me.gamerduck.alwaysauth.api;
 import me.gamerduck.alwaysauth.Platform;
 
 import java.io.*;
-import java.util.Arrays;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.security.SecureRandom;
+import java.util.*;
 
 public class SessionConfig {
     private final LinkedHashMap<String, String> properties;
@@ -13,7 +12,9 @@ public class SessionConfig {
     private final File configFile;
     private final Platform platform;
 
-    private static final String DEFAULT_IP_ADDRESS = "http://127.0.0.1";
+    private static final boolean DEFAULT_DEBUG = false;
+
+    private static final String DEFAULT_IP_ADDRESS = "127.0.0.1";
     private static final int DEFAULT_PORT = 8765;
 
     private static final boolean DEFAULT_FALLBACK_ENABLED = true;
@@ -28,6 +29,8 @@ public class SessionConfig {
     private static final String DEFAULT_DB_PASSWORD = "";
 
     private static final String DEFAULT_UPSTREAM_SESSION_SERVER = "https://sessionserver.mojang.com";
+    private static final boolean DEFAULT_AUTHENTICATION_ENABLED = true; // PATH-based auth works!
+    private static final boolean DEFAULT_ENCRYPT_PROFILE_DATA = false;
 
     public SessionConfig(File dataFolder, Platform platform) {
         this.configFile = new File(dataFolder, "config.properties");
@@ -154,10 +157,16 @@ public class SessionConfig {
     private void setDefaults() {
         properties.clear();
         comments.clear();
+        setProperty("debug", String.valueOf(DEFAULT_DEBUG), "Whether or not there should be debug message\n# This won't work on the standalone jar");
 
         // Server settings
         setProperty("ip-address", DEFAULT_IP_ADDRESS, "The ip for the session server\n# If set anything other than 127.0.0.1 or 0.0.0.0 (allows public access), it will treat as external server\n# An external server means only port needs to be set (to match that external server) and it will use that to authenticate.\n# Please note as of right now you will not see console logs on the server if you are using an external server");
         setProperty("port", String.valueOf(DEFAULT_PORT), "Port for the session server");
+
+        // Security settings
+        setProperty("authentication-enabled", String.valueOf(DEFAULT_AUTHENTICATION_ENABLED), "Enable HMAC-SHA256 signature verification for authorized servers\n# Currently DISABLED by default due to Minecraft URL handling limitations\n# Use firewall rules or localhost restriction for access control instead\n# Database encryption works regardless of this setting");
+        setProperty("secret-key", generateSecretKey(), "Secret key for database encryption (auto-generated)\n# KEEP THIS SECRET! Used to encrypt IP addresses and profile data in database\n# If deleted database will need to also be reset!\n# To regenerate, delete this line and restart the server");
+        setProperty("encrypt-profile-data", String.valueOf(DEFAULT_ENCRYPT_PROFILE_DATA), "Encrypt player profile data in database (JSON with skins/capes)\n# IP addresses are ALWAYS encrypted\n# Set to true for maximum privacy (slight performance impact)");
 
         // Fallback settings
         setProperty("fallback-enabled", String.valueOf(DEFAULT_FALLBACK_ENABLED), "Enable session fallback when Mojang servers are down");
@@ -170,9 +179,16 @@ public class SessionConfig {
         setProperty("database.type", DEFAULT_DB_TYPE, "Database type: h2, mysql, or mariadb");
         setProperty("database.host", DEFAULT_DB_HOST, "Database host (not used for H2)");
         setProperty("database.port", String.valueOf(DEFAULT_DB_PORT_MYSQL), "Database port (not used for H2)");
-        setProperty("database.name", DEFAULT_DB_NAME, "Database name (The file name for H2)");
+        setProperty("database.name", DEFAULT_DB_NAME, "Database name");
         setProperty("database.username", DEFAULT_DB_USERNAME, "Database username (not used for H2)");
         setProperty("database.password", DEFAULT_DB_PASSWORD, "Database password (not used for H2)");
+    }
+
+    private String generateSecretKey() {
+        SecureRandom random = new SecureRandom();
+        byte[] keyBytes = new byte[32]; // 256 bits
+        random.nextBytes(keyBytes);
+        return Base64.getEncoder().encodeToString(keyBytes).replaceAll("\\+", String.valueOf((char) (random.nextInt(26) + 'a')));
     }
 
     private void setProperty(String key, String value, String comment) {
@@ -219,8 +235,25 @@ public class SessionConfig {
         }
     }
 
+    // Getters
     public int getPort() {
         return Integer.parseInt(properties.getOrDefault("port", String.valueOf(DEFAULT_PORT)));
+    }
+
+    public Boolean getDebug() {
+        return Boolean.parseBoolean(properties.getOrDefault("debug", String.valueOf(DEFAULT_DEBUG)));
+    }
+
+    public boolean isAuthenticationEnabled() {
+        return Boolean.parseBoolean(properties.getOrDefault("authentication-enabled", String.valueOf(DEFAULT_AUTHENTICATION_ENABLED)));
+    }
+
+    public String getSecretKey() {
+        return properties.getOrDefault("secret-key", generateSecretKey());
+    }
+
+    public boolean isEncryptProfileData() {
+        return Boolean.parseBoolean(properties.getOrDefault("encrypt-profile-data", String.valueOf(DEFAULT_ENCRYPT_PROFILE_DATA)));
     }
 
     public boolean isFallbackEnabled() {
@@ -239,16 +272,8 @@ public class SessionConfig {
         return properties.getOrDefault("upstream-server", DEFAULT_UPSTREAM_SESSION_SERVER);
     }
 
-    public void setUpstreamSessionServer(String server) {
-        properties.put("upstream-server", server);
-    }
-
     public String getIpAddress() {
         return properties.getOrDefault("ip-address", DEFAULT_IP_ADDRESS);
-    }
-
-    public void setIpAddress(String ip) {
-        properties.put("ip-address", ip);
     }
 
     public int getCleanupDays() {
@@ -259,30 +284,8 @@ public class SessionConfig {
         return properties.getOrDefault("security-level", "basic");
     }
 
-    public void setPort(int port) {
-        properties.put("port", String.valueOf(port));
-    }
-
-    public void setFallbackEnabled(boolean enabled) {
-        properties.put("fallback-enabled", String.valueOf(enabled));
-    }
-
-    public void setMaxOfflineHours(int hours) {
-        properties.put("max-offline-hours", String.valueOf(hours));
-    }
-
-    public void setSecurityLevel(String level) {
-        if ("basic".equalsIgnoreCase(level) || "medium".equalsIgnoreCase(level)) {
-            properties.put("security-level", level.toLowerCase());
-        }
-    }
-
-    public void setCleanupDays(int days) {
-        properties.put("cleanup-days", String.valueOf(days));
-    }
-
     public String getSessionServerUrl() {
-        return "http://" + getIpAddress() + ":" + getPort();
+        return "http://" + getIpAddress() + ":" + getPort() + "/auth?token=" + getSecretKey();
     }
 
     public String getDatabaseType() {
@@ -307,6 +310,49 @@ public class SessionConfig {
 
     public String getDatabasePassword() {
         return properties.getOrDefault("database.password", DEFAULT_DB_PASSWORD);
+    }
+
+    // Setters
+    public void setUpstreamSessionServer(String server) {
+        properties.put("upstream-server", server);
+    }
+
+    public void setIpAddress(String ip) {
+        properties.put("ip-address", ip);
+    }
+
+    public void setPort(int port) {
+        properties.put("port", String.valueOf(port));
+    }
+
+    public void setAuthenticationEnabled(boolean enabled) {
+        properties.put("authentication-enabled", String.valueOf(enabled));
+    }
+
+    public void setSecretKey(String key) {
+        properties.put("secret-key", key);
+    }
+
+    public void setEncryptProfileData(boolean encrypt) {
+        properties.put("encrypt-profile-data", String.valueOf(encrypt));
+    }
+
+    public void setFallbackEnabled(boolean enabled) {
+        properties.put("fallback-enabled", String.valueOf(enabled));
+    }
+
+    public void setMaxOfflineHours(int hours) {
+        properties.put("max-offline-hours", String.valueOf(hours));
+    }
+
+    public void setSecurityLevel(String level) {
+        if ("basic".equalsIgnoreCase(level) || "medium".equalsIgnoreCase(level)) {
+            properties.put("security-level", level.toLowerCase());
+        }
+    }
+
+    public void setCleanupDays(int days) {
+        properties.put("cleanup-days", String.valueOf(days));
     }
 
     public void setDatabaseType(String type) {
@@ -345,6 +391,7 @@ public class SessionConfig {
         return "SessionConfig{" +
                 "ip-address=" + getIpAddress() +
                 ", port=" + getPort() +
+                ", authenticationEnabled=" + isAuthenticationEnabled() +
                 ", fallbackEnabled=" + isFallbackEnabled() +
                 ", securityLevel=" + getSecurityLevel() +
                 ", upstream-server=" + getUpstreamSessionServer() +

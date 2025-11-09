@@ -36,7 +36,7 @@ public class VelocitySessionServerChanger {
             String formattedUrl = customSessionServer.concat("/session/minecraft/hasJoined").concat("?username=%s&serverId=%s");
             unsafe.putObject(base, offset, formattedUrl);
 
-            platform.sendLogMessage("Successfully changed Mojang session server URL to " + customSessionServer);
+            if (platform.isDebug()) platform.sendLogMessage("Successfully changed Mojang session server URL to " + customSessionServer);
 
         } catch (Exception e) {
             platform.sendSevereLogMessage("Failed to modify Mojang session server URL:");
@@ -44,23 +44,4 @@ public class VelocitySessionServerChanger {
         }
     }
 
-
-    public static void changeSessionServer(Platform platform, String newBaseUrl) {
-        try {
-            Unsafe unsafe = getUnsafe();
-
-            Class<?> clazz = Class.forName("com.velocitypowered.proxy.connection.client.InitialLoginSessionHandler");
-            Field targetField = clazz.getDeclaredField("MOJANG_HASJOINED_URL");
-
-            Object base = unsafe.staticFieldBase(targetField);
-            long offset = unsafe.staticFieldOffset(targetField);
-
-            String formattedUrl = newBaseUrl.concat("/session/minecraft/hasJoined").concat("?username=%s&serverId=%s");
-            unsafe.putObject(base, offset, formattedUrl);
-
-            platform.sendLogMessage("Unsafe overwrite successful: " + formattedUrl);
-        } catch (Throwable t) {
-            t.printStackTrace();
-        }
-    }
 }

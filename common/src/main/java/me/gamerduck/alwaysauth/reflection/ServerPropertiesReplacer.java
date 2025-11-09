@@ -68,7 +68,7 @@ public class ServerPropertiesReplacer {
             long fieldOffset = unsafe.objectFieldOffset(preventProxyField);
             unsafe.putBoolean(properties, fieldOffset, PREVENT_PROXY_CONNECTIONS_VALUE);
 
-            platform.sendLogMessage("Successfully set preventProxyConnections to " + PREVENT_PROXY_CONNECTIONS_VALUE);
+            if (platform.isDebug()) platform.sendLogMessage("Successfully set preventProxyConnections to " + PREVENT_PROXY_CONNECTIONS_VALUE);
 
         } catch (Exception e) {
             platform.sendSevereLogMessage("Failed to modify server properties:");

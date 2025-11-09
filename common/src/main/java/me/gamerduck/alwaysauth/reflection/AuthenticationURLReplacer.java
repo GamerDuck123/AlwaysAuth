@@ -91,10 +91,12 @@ public class AuthenticationURLReplacer {
             URL newCheckUrl = (URL) constantUrlMethod.invoke(null, newBaseUrl + "hasJoined");
             checkUrlField.set(sessionService, newCheckUrl);
 
-            platform.sendLogMessage("Successfully replaced authentication URLs:");
-            platform.sendLogMessage("  Base URL: " + newBaseUrl);
-            platform.sendLogMessage("  Join URL: " + newJoinUrl);
-            platform.sendLogMessage("  Check URL: " + newCheckUrl);
+            if (platform.isDebug()) {
+                platform.sendLogMessage("Successfully replaced authentication URLs:");
+                platform.sendLogMessage("  Base URL: " + newBaseUrl);
+                platform.sendLogMessage("  Join URL: " + newJoinUrl);
+                platform.sendLogMessage("  Check URL: " + newCheckUrl);
+            }
 
         } catch (Exception e) {
             platform.sendSevereLogMessage("Failed to replace authentication service:");

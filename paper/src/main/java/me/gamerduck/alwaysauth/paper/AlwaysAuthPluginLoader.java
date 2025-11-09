@@ -16,7 +16,7 @@ public class AlwaysAuthPluginLoader implements PluginLoader {
         resolver.addDependency(new Dependency(new DefaultArtifact("com.h2database:h2:2.3.232"), null));
         resolver.addDependency(new Dependency(new DefaultArtifact("mysql:mysql-connector-java:8.0.33"), null));
         resolver.addDependency(new Dependency(new DefaultArtifact("org.mariadb.jdbc:mariadb-java-client:3.3.2"), null));
-        resolver.addRepository(new RemoteRepository.Builder("central", "default", "https://repo1.maven.org/maven2").build());
+        resolver.addRepository(new RemoteRepository.Builder("central", "default", MavenLibraryResolver.MAVEN_CENTRAL_DEFAULT_MIRROR).build());
 
         classpathBuilder.addLibrary(resolver);
     }
