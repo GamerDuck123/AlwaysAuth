@@ -1,6 +1,8 @@
 import net.neoforged.nfrtgradle.CreateMinecraftArtifacts
 dependencies {
     implementation(libs.h2)
+    implementation(libs.mysql)
+    implementation(libs.mariadb)
 }
 
 neoForge {

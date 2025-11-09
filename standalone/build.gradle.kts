@@ -5,7 +5,6 @@ dependencies {
     implementation(libs.gson)
     implementation(libs.mysql)
     implementation(libs.mariadb)
-    implementation(libs.postgres)
 }
 
 tasks.register<Copy>("copyCommonSources") {

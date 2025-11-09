@@ -3,6 +3,8 @@ dependencies {
     annotationProcessor(libs.velocity)
 
     implementation(libs.h2)
+    implementation(libs.mysql)
+    implementation(libs.mariadb)
 }
 
 tasks.register<Copy>("copyCommonSources") {
