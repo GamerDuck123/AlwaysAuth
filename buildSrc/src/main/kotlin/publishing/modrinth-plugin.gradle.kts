@@ -5,7 +5,7 @@ plugins {
 modrinth {
     versionNumber.set("${version as String}-${name}")
     loaders.addAll(
-        when (name) {
+        when (project.name) {
             "fabric" -> listOf("fabric", "babric", "quilt")
             "neoforge" -> listOf("neoforge")
             "paper" -> listOf("paper", "purpur")
@@ -14,12 +14,12 @@ modrinth {
             else -> throw IllegalStateException("Unknown loader $name")
         }
     )
-    uploadFile.set(when (name) {
+    uploadFile.set(when (project.name) {
         "fabric" -> tasks.named<net.fabricmc.loom.task.RemapJarTask>("remapJar")
         "neoforge" -> tasks.named<Jar>("jar")
         "paper" -> tasks.named<Jar>("jar")
-        "spigot" -> tasks.named<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("shadowJar")
-        "velocity" -> tasks.named<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("shadowJar")
+        "spigot" -> tasks.named<Jar>("jar")
+        "velocity" -> tasks.named<Jar>("jar")
         else -> throw IllegalStateException("Unknown loader $name")
     })
 

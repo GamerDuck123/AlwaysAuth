@@ -10,7 +10,10 @@ import com.velocitypowered.api.event.proxy.ProxyShutdownEvent;
 import com.velocitypowered.api.plugin.Plugin;
 import com.velocitypowered.api.plugin.annotation.DataDirectory;
 import com.velocitypowered.api.proxy.ProxyServer;
+import me.gamerduck.alwaysauth.velocity.api.LibraryResolver;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.logging.Logger;
 
@@ -89,6 +92,24 @@ public class AlwaysAuthPlugin {
     }
     @Subscribe
     public void onProxyInitialization(ProxyInitializeEvent event) {
+        Path libraries  = dataDirectory.resolve("libraries");
+        if (Files.notExists(libraries)) {
+            try {
+                Files.createDirectories(libraries);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        LibraryResolver resolver = new LibraryResolver();
+        resolver.addDependency("com.h2database:h2:2.3.232");
+        resolver.addDependency("mysql:mysql-connector-java:8.0.33");
+        resolver.addDependency("org.mariadb.jdbc:mariadb-java-client:3.3.2");
+        resolver.addRepository("https://repo1.maven.org/maven2");
+        try {
+            resolver.resolveDependencies(libraries, server.getPluginManager(), this);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
         try {
             velocityPlatform = new VelocityPlatform(server, logger, dataDirectory);
         } catch (Exception e) {

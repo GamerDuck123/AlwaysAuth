@@ -13,7 +13,7 @@ public class SessionConfig {
     private final File configFile;
     private final Platform platform;
 
-    private static final String DEFAULT_IP_ADDRESS = "http://127.0.0.1";
+    private static final String DEFAULT_IP_ADDRESS = "127.0.0.1";
     private static final int DEFAULT_PORT = 8765;
 
     private static final boolean DEFAULT_FALLBACK_ENABLED = true;
