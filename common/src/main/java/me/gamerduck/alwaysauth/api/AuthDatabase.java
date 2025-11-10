@@ -15,7 +15,15 @@ import java.util.Base64;
 
 /**
  * Authentication database with AES-256-GCM encryption for sensitive data.
- * Encrypts IP addresses and optionally profile data.
+ * <p>
+ * This class manages a database of player authentication records with built-in encryption
+ * for sensitive information. IP addresses are always encrypted, and profile data can be
+ * optionally encrypted based on configuration settings.
+ * </p>
+ * <p>
+ * Supports both local H2 databases and remote MySQL/MariaDB databases. All encryption
+ * uses AES-256 in GCM (Galois/Counter Mode) for authenticated encryption.
+ * </p>
  */
 public class AuthDatabase {
     private Connection connection;
@@ -24,11 +32,20 @@ public class AuthDatabase {
     private final boolean isRemote;
     private final EncryptionHelper encryptionHelper;
 
-    // Encryption settings
     private static final String ENCRYPTION_ALGORITHM = "AES/GCM/NoPadding";
-    private static final int GCM_IV_LENGTH = 12; // 96 bits
-    private static final int GCM_TAG_LENGTH = 128; // 128 bits
+    private static final int GCM_IV_LENGTH = 12;
+    private static final int GCM_TAG_LENGTH = 128;
 
+    /**
+     * Constructs a local H2 database instance.
+     * <p>
+     * Creates or connects to a file-based H2 database with MySQL compatibility mode.
+     * Automatically initializes tables and sets up AES-256-GCM encryption.
+     * </p>
+     *
+     * @param dbFile the file path for the H2 database (without .mv.db extension)
+     * @param platform the platform implementation for logging and configuration
+     */
     public AuthDatabase(File dbFile, Platform platform) {
         this.platform = platform;
         this.gson = new Gson();
@@ -36,10 +53,8 @@ public class AuthDatabase {
         this.encryptionHelper = new EncryptionHelper(platform.config().getSecretKey());
 
         try {
-            // Use H2 instead of SQLite
             Class.forName("org.h2.Driver");
 
-            // Create a file-based H2 database (auto-creates .mv.db file)
             String url = "jdbc:h2:file:" + dbFile.getAbsolutePath().replace("\\", "/") + ";AUTO_SERVER=TRUE;MODE=MySQL";
 
             connection = DriverManager.getConnection(url, "sa", "");
@@ -56,6 +71,22 @@ public class AuthDatabase {
         }
     }
 
+    /**
+     * Constructs a remote database instance.
+     * <p>
+     * Connects to a remote MySQL or MariaDB database. Automatically initializes
+     * tables and sets up AES-256-GCM encryption for sensitive data.
+     * </p>
+     *
+     * @param host the database server hostname or IP address
+     * @param port the database server port
+     * @param database the database/schema name
+     * @param username the database username
+     * @param password the database password
+     * @param dbType the database type ("mysql" or "mariadb")
+     * @param platform the platform implementation for logging and configuration
+     * @throws IllegalArgumentException if dbType is not "mysql" or "mariadb"
+     */
     public AuthDatabase(String host, int port, String database, String username, String password, String dbType, Platform platform) {
         this.platform = platform;
         this.gson = new Gson();
@@ -95,6 +126,15 @@ public class AuthDatabase {
         }
     }
 
+    /**
+     * Initializes the database schema.
+     * <p>
+     * Creates the player_auth table if it doesn't exist. The table stores:
+     * username, UUID, encrypted IP address, last seen timestamp, and encrypted profile data.
+     * </p>
+     *
+     * @throws SQLException if table creation fails
+     */
     private void initializeTables() throws SQLException {
         String createTable = """
             CREATE TABLE IF NOT EXISTS player_auth (
@@ -111,6 +151,18 @@ public class AuthDatabase {
         }
     }
 
+    /**
+     * Caches player authentication data in the database.
+     * <p>
+     * Stores or updates a player's authentication record with encrypted sensitive data.
+     * IP addresses are always encrypted. Profile data encryption depends on configuration.
+     * Uses UPSERT logic (INSERT or UPDATE if exists) to maintain one record per player.
+     * </p>
+     *
+     * @param username the player's username (case-insensitive)
+     * @param ip the player's IP address (will be encrypted)
+     * @param profile the player's profile JSON from Mojang (contains UUID, textures, etc.)
+     */
     public void cacheAuthentication(String username, String ip, JsonObject profile) {
         if (username == null || profile == null) return;
 
@@ -119,7 +171,6 @@ public class AuthDatabase {
             String profileJson = gson.toJson(profile);
             long timestamp = System.currentTimeMillis();
 
-            // Encrypt sensitive data
             String encryptedIp = encryptionHelper.encrypt(ip != null ? ip : "unknown");
             String encryptedProfile = platform.config().isEncryptProfileData()
                     ? encryptionHelper.encrypt(profileJson)
@@ -159,6 +210,23 @@ public class AuthDatabase {
         }
     }
 
+    /**
+     * Retrieves cached authentication data for fallback when Mojang is unavailable.
+     * <p>
+     * Validates the cached entry against:
+     * <ul>
+     *     <li>IP address matching (if provided)</li>
+     *     <li>Time-based expiry (if maxOfflineHours &gt; 0)</li>
+     * </ul>
+     * Returns null if validation fails or no cache exists.
+     * Automatically decrypts sensitive data before returning.
+     * </p>
+     *
+     * @param username the player's username to look up
+     * @param ip the player's current IP address for validation (can be null)
+     * @param maxOfflineHours maximum hours since last seen (0 = no limit)
+     * @return the decrypted profile JSON if valid, null otherwise
+     */
     public String getFallbackAuth(String username, String ip, int maxOfflineHours) {
         if (username == null) return null;
 
@@ -178,7 +246,6 @@ public class AuthDatabase {
                         long lastSeen = rs.getLong("last_seen");
                         String profileData = rs.getString("profile_data");
 
-                        // Decrypt IP for comparison
                         String cachedIp = encryptionHelper.decrypt(encryptedIp);
 
                         if (ip != null && !ip.equals("unknown") && !ip.equals(cachedIp)) {
@@ -194,7 +261,6 @@ public class AuthDatabase {
                             }
                         }
 
-                        // Decrypt profile data if it was encrypted
                         if (platform.config().isEncryptProfileData()) {
                             return encryptionHelper.decrypt(profileData);
                         } else {
@@ -212,6 +278,18 @@ public class AuthDatabase {
         return null;
     }
 
+    /**
+     * Retrieves cache statistics.
+     * <p>
+     * Calculates:
+     * <ul>
+     *     <li>Total number of cached players</li>
+     *     <li>Number of players active in the last 24 hours</li>
+     * </ul>
+     * </p>
+     *
+     * @return a CacheStats object containing the statistics
+     */
     public CacheStats getStats() {
         CacheStats stats = new CacheStats();
 
@@ -246,6 +324,16 @@ public class AuthDatabase {
         return stats;
     }
 
+    /**
+     * Removes old cached authentication entries.
+     * <p>
+     * Deletes all player records that haven't been seen in the specified number of days.
+     * Useful for maintaining database size and removing stale data.
+     * </p>
+     *
+     * @param daysOld the age threshold in days (entries older than this are deleted)
+     * @return the number of entries deleted
+     */
     public int cleanOldEntries(int daysOld) {
         try {
             long cutoffTime = System.currentTimeMillis() - ((long) daysOld * 24 * 60 * 60 * 1000);
@@ -264,6 +352,13 @@ public class AuthDatabase {
         }
     }
 
+    /**
+     * Closes the database connection.
+     * <p>
+     * Should be called during server shutdown to properly release database resources.
+     * Does nothing if the connection is already closed.
+     * </p>
+     */
     public void close() {
         try {
             if (connection != null && !connection.isClosed()) {
@@ -276,14 +371,27 @@ public class AuthDatabase {
     }
 
     /**
-     * Helper class for AES-256-GCM encryption/decryption
+     * Helper class for AES-256-GCM encryption and decryption.
+     * <p>
+     * Provides authenticated encryption using AES-256 in Galois/Counter Mode.
+     * The secret key is hashed with SHA-256 to derive a 256-bit encryption key.
+     * Each encryption uses a unique random IV for security.
+     * </p>
      */
     private static class EncryptionHelper {
         private final SecretKeySpec keySpec;
         private final SecureRandom secureRandom;
 
+        /**
+         * Constructs an EncryptionHelper with a secret key.
+         * <p>
+         * Derives a 256-bit AES key from the provided secret using SHA-256 hashing.
+         * </p>
+         *
+         * @param secretKey the secret key string to derive the encryption key from
+         * @throws RuntimeException if encryption initialization fails
+         */
         public EncryptionHelper(String secretKey) {
-            // Derive a 256-bit key from the secret key using SHA-256
             try {
                 java.security.MessageDigest digest = java.security.MessageDigest.getInstance("SHA-256");
                 byte[] keyBytes = digest.digest(secretKey.getBytes(StandardCharsets.UTF_8));
@@ -295,8 +403,15 @@ public class AuthDatabase {
         }
 
         /**
-         * Encrypt data using AES-256-GCM
-         * Format: Base64(IV + ciphertext + tag)
+         * Encrypts data using AES-256-GCM.
+         * <p>
+         * Generates a random 96-bit IV for each encryption.
+         * Returns Base64-encoded string in format: IV + ciphertext + authentication tag.
+         * </p>
+         *
+         * @param plaintext the data to encrypt
+         * @return Base64-encoded encrypted data, or empty string if plaintext is null/empty
+         * @throws RuntimeException if encryption fails
          */
         public String encrypt(String plaintext) {
             if (plaintext == null || plaintext.isEmpty()) {
@@ -304,24 +419,19 @@ public class AuthDatabase {
             }
 
             try {
-                // Generate random IV
                 byte[] iv = new byte[GCM_IV_LENGTH];
                 secureRandom.nextBytes(iv);
 
-                // Initialize cipher
                 Cipher cipher = Cipher.getInstance(ENCRYPTION_ALGORITHM);
                 GCMParameterSpec parameterSpec = new GCMParameterSpec(GCM_TAG_LENGTH, iv);
                 cipher.init(Cipher.ENCRYPT_MODE, keySpec, parameterSpec);
 
-                // Encrypt
                 byte[] ciphertext = cipher.doFinal(plaintext.getBytes(StandardCharsets.UTF_8));
 
-                // Combine IV + ciphertext
                 byte[] combined = new byte[iv.length + ciphertext.length];
                 System.arraycopy(iv, 0, combined, 0, iv.length);
                 System.arraycopy(ciphertext, 0, combined, iv.length, ciphertext.length);
 
-                // Return as Base64
                 return Base64.getEncoder().encodeToString(combined);
 
             } catch (Exception e) {
@@ -330,8 +440,15 @@ public class AuthDatabase {
         }
 
         /**
-         * Decrypt data using AES-256-GCM
-         * Expects format: Base64(IV + ciphertext + tag)
+         * Decrypts data using AES-256-GCM.
+         * <p>
+         * Expects Base64-encoded input in format: IV + ciphertext + authentication tag.
+         * Verifies data integrity using the GCM authentication tag.
+         * </p>
+         *
+         * @param encrypted the Base64-encoded encrypted data
+         * @return the decrypted plaintext, or empty string if encrypted is null/empty
+         * @throws RuntimeException if decryption fails or data is tampered with
          */
         public String decrypt(String encrypted) {
             if (encrypted == null || encrypted.isEmpty()) {
@@ -339,23 +456,18 @@ public class AuthDatabase {
             }
 
             try {
-                // Decode from Base64
                 byte[] combined = Base64.getDecoder().decode(encrypted);
 
-                // Extract IV
                 byte[] iv = new byte[GCM_IV_LENGTH];
                 System.arraycopy(combined, 0, iv, 0, iv.length);
 
-                // Extract ciphertext
                 byte[] ciphertext = new byte[combined.length - GCM_IV_LENGTH];
                 System.arraycopy(combined, GCM_IV_LENGTH, ciphertext, 0, ciphertext.length);
 
-                // Initialize cipher
                 Cipher cipher = Cipher.getInstance(ENCRYPTION_ALGORITHM);
                 GCMParameterSpec parameterSpec = new GCMParameterSpec(GCM_TAG_LENGTH, iv);
                 cipher.init(Cipher.DECRYPT_MODE, keySpec, parameterSpec);
 
-                // Decrypt
                 byte[] plaintext = cipher.doFinal(ciphertext);
                 return new String(plaintext, StandardCharsets.UTF_8);
 
@@ -365,8 +477,18 @@ public class AuthDatabase {
         }
     }
 
+    /**
+     * Container for authentication cache statistics.
+     * <p>
+     * Holds metrics about cached player authentication data including
+     * total players and recent activity.
+     * </p>
+     */
     public static class CacheStats {
+        /** Total number of players in the cache */
         public int totalPlayers = 0;
+
+        /** Number of players active in the last 24 hours */
         public int recentPlayers = 0;
 
         @Override
