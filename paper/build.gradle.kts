@@ -1,3 +1,7 @@
+plugins {
+    id("paper-plugin")
+}
+
 dependencies {
     paperweight.paperDevBundle("${libs.versions.minecraft.get()}-R0.1-SNAPSHOT")
     compileOnly(libs.brigadier)

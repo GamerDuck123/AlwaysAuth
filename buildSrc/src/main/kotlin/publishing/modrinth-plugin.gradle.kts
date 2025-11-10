@@ -2,6 +2,8 @@ plugins {
     id("com.modrinth.minotaur")
 }
 
+val libs = extensions.getByType(VersionCatalogsExtension::class.java).named("libs")
+
 modrinth {
     versionNumber.set("${version as String}-${name}")
     loaders.addAll(
@@ -23,7 +25,7 @@ modrinth {
         else -> throw IllegalStateException("Unknown loader $name")
     })
 
-    gameVersions.addAll(rootProject.property("minecraft_version") as String)
+    gameVersions.addAll(libs.findVersion("minecraft").get().toString())
     token.set(System.getenv("MODRINTH_TOKEN"))
     projectId.set(rootProject.property("modrinthID") as String)
     versionType.set(rootProject.property("versionType") as String)

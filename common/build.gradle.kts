@@ -1,3 +1,7 @@
+plugins {
+    id("common-plugin")
+}
+
 dependencies {
     compileOnly(libs.mixin)
     annotationProcessor("${libs.mixin.get()}:processor")

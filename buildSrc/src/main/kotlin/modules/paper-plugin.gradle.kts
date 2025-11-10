@@ -2,6 +2,8 @@ plugins {
     id("root-plugin")
 
     id("io.papermc.paperweight.userdev")
+    id("modrinth-plugin")
+    id("hangar-plugin")
 }
 
 repositories {
