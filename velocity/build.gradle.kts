@@ -47,13 +47,8 @@ tasks {
     processResources {
         dependsOn("copyCommonSources")
     }
-    build {
-        dependsOn("shadowJar")
-    }
 }
 
-tasks.named<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("shadowJar") {
-    archiveClassifier.set("")
-    relocate("org.h2", "me.gamerduck.alwaysauth.libs.h2")
-    mergeServiceFiles()
+tasks.named("publishPluginPublicationToHangar") {
+    dependsOn(tasks.named("jar"))
 }

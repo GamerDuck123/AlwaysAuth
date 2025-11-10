@@ -7,7 +7,7 @@ val libs = extensions.getByType(VersionCatalogsExtension::class.java).named("lib
 modrinth {
     versionNumber.set("${version as String}-${name}")
     loaders.addAll(
-        when (name) {
+        when (project.name) {
             "fabric" -> listOf("fabric", "babric", "quilt")
             "neoforge" -> listOf("neoforge")
             "paper" -> listOf("paper", "purpur")
@@ -16,7 +16,7 @@ modrinth {
             else -> throw IllegalStateException("Unknown loader $name")
         }
     )
-    uploadFile.set(when (name) {
+    uploadFile.set(when (project.name) {
         "fabric" -> tasks.named<net.fabricmc.loom.task.RemapJarTask>("remapJar")
         "neoforge" -> tasks.named<Jar>("jar")
         "paper" -> tasks.named<Jar>("jar")
