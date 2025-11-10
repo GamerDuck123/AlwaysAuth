@@ -12,10 +12,25 @@ import java.nio.charset.StandardCharsets;
 import java.util.concurrent.Executors;
 
 /**
- * Core session proxy server that forwards authentication to Upstream
- * and falls back to local database when Upstream is unavailable.
+ * Core session proxy server that intercepts Minecraft authentication requests.
+ * <p>
+ * This server acts as a middleware between Minecraft servers and Mojang's authentication servers.
+ * It forwards authentication requests to Mojang with a configurable timeout, and falls back to
+ * a local database when Mojang's servers are unreachable.
+ * </p>
+ * <p>
+ * The server handles two primary endpoints:
+ * <ul>
+ *     <li>/session/minecraft/hasJoined - Validates player authentication</li>
+ *     <li>/session/minecraft/join - Records player join requests</li>
+ * </ul>
+ * </p>
+ * <p>
+ * When authentication mode is enabled, requests are routed through /auth with token validation.
+ * </p>
  */
 public class SessionProxyServer {
+    /** Timeout in milliseconds for upstream Mojang server requests */
     private static final int UPSTREAM_TIMEOUT_MS = 3000;
 
     private final HttpServer server;
@@ -24,39 +39,185 @@ public class SessionProxyServer {
     private final SessionConfig config;
     private final Platform platform;
     private final String upstreamSessionServer;
+    private final Boolean debug;
 
+    /**
+     * Gets the authentication database instance.
+     *
+     * @return the AuthDatabase used for caching player authentication data
+     */
     public AuthDatabase getDatabase() {
         return database;
     }
 
+    /**
+     * Constructs a new SessionProxyServer.
+     * <p>
+     * Initializes the HTTP server, database connection, and endpoint handlers.
+     * The server uses virtual threads for concurrent request handling.
+     * </p>
+     *
+     * @param port the port number to bind the HTTP server to
+     * @param dataFolder the directory for storing local database files
+     * @param platform the platform implementation providing logging and configuration
+     * @param config the session configuration containing server settings
+     * @throws IOException if the server cannot be created or bound to the specified port
+     */
     public SessionProxyServer(int port, File dataFolder, Platform platform, SessionConfig config) throws IOException {
         this.platform = platform;
         this.gson = new Gson();
         this.config = config;
-        if (config.isRemoteDatabase()) this.database = new AuthDatabase(config.getDatabaseHost(), config.getDatabasePort(),
-                config.getDatabaseName(), config.getDatabaseUsername(), config.getDatabasePassword(), config.getDatabaseType(), platform);
-        else this.database = new AuthDatabase(new File(dataFolder, "authcache.db"), platform);
+        this.debug = platform.isDebug();
+
+        if (config.isRemoteDatabase()) {
+            this.database = new AuthDatabase(
+                    config.getDatabaseHost(),
+                    config.getDatabasePort(),
+                    config.getDatabaseName(),
+                    config.getDatabaseUsername(),
+                    config.getDatabasePassword(),
+                    config.getDatabaseType(),
+                    platform
+            );
+        } else {
+            this.database = new AuthDatabase(new File(dataFolder, "authcache.db"), platform);
+        }
+
         this.upstreamSessionServer = config.getUpstreamSessionServer();
 
         this.server = HttpServer.create(new InetSocketAddress(config.getIpAddress(), port), 0);
-        this.server.createContext("/session/minecraft/hasJoined", this::handleHasJoined);
-        this.server.createContext("/session/minecraft/join", this::handleJoin);
+
+
+        if (config.isAuthenticationEnabled()) {
+            this.server.createContext("/auth", this::handleAuthPath);
+        } else {
+            this.server.createContext("/session/minecraft/hasJoined", this::handleHasJoined);
+            this.server.createContext("/session/minecraft/join", this::handleJoin);
+        }
         this.server.setExecutor(Executors.newVirtualThreadPerTaskExecutor());
 
         platform.sendLogMessage("Session proxy server created on port " + port);
+        platform.sendLogMessage("Authentication mode: " + (config.isAuthenticationEnabled() ? "ENABLED" : "DISABLED"));
     }
 
+    /**
+     * Starts the HTTP server to begin accepting authentication requests.
+     * <p>
+     * The server will begin listening on the configured port and handle incoming requests
+     * using virtual threads for concurrent processing.
+     * </p>
+     */
     public void start() {
         server.start();
         platform.sendLogMessage("Session proxy server started");
     }
 
+    /**
+     * Stops the HTTP server and closes all resources.
+     * <p>
+     * This method gracefully shuts down the HTTP server and closes the database connection.
+     * The server will stop accepting new requests immediately.
+     * </p>
+     */
     public void stop() {
         server.stop(0);
         database.close();
         platform.sendLogMessage("Session proxy server stopped");
     }
 
+    /**
+     * Verifies the authentication token for protected endpoints.
+     * <p>
+     * If authentication is disabled in config, always returns true.
+     * Otherwise, validates the provided token against the configured secret key.
+     * </p>
+     *
+     * @param providedToken the token to verify, or null if not provided
+     * @return true if the token is valid or authentication is disabled, false otherwise
+     */
+    private boolean verifyAuthToken(String providedToken) {
+        if (!config.isAuthenticationEnabled()) {
+            return true;
+        }
+
+        if (providedToken == null) {
+            return false;
+        }
+
+        String currentToken = config.getSecretKey();
+        if (providedToken.equals(currentToken)) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Handles authenticated requests to the /auth endpoint.
+     * <p>
+     * Extracts and verifies the authentication token from the query string,
+     * then routes the request to the appropriate handler based on the path.
+     * Expects format: /auth?token={token}/session/minecraft/{endpoint}
+     * </p>
+     *
+     * @param exchange the HTTP exchange containing the request and response
+     * @throws IOException if an I/O error occurs during request handling
+     */
+    private void handleAuthPath(HttpExchange exchange) throws IOException {
+        try {
+            String query = exchange.getRequestURI().getQuery();
+            String token = null;
+            String fullPath = null;
+
+            if (query != null) {
+                for (String param : query.split("&")) {
+                    String[] pair = param.split("=", 2);
+                    if (pair.length == 2 && "token".equals(pair[0])) {
+                        String[] pairAndPath = pair[1].split("/session", 2);
+                        token = URLDecoder.decode(pairAndPath[0], "UTF-8");
+                        fullPath = "/session" + pairAndPath[1];
+                        break;
+                    }
+                }
+            }
+
+            if (!verifyAuthToken(token)) {
+                platform.sendWarningLogMessage("Invalid or missing auth token");
+                sendResponse(exchange, 403, "Forbidden: Invalid authentication token");
+                return;
+            }
+
+            if (fullPath.startsWith("/session/minecraft/hasJoined")) {
+                handleHasJoined(exchange);
+            } else if (fullPath.startsWith("/session/minecraft/join")) {
+                handleJoin(exchange);
+            } else {
+                sendResponse(exchange, 404, "Not Found");
+            }
+
+        } catch (Exception e) {
+            platform.sendSevereLogMessage("Error handling auth path: " + e.getMessage());
+            e.printStackTrace();
+            sendResponse(exchange, 500, "Internal server error");
+        }
+    }
+
+    /**
+     * Handles the /session/minecraft/hasJoined endpoint for player authentication validation.
+     * <p>
+     * This endpoint is called by Minecraft servers to verify that a player has successfully
+     * authenticated with Mojang. The method:
+     * <ol>
+     *     <li>Forwards the request to Mojang's servers</li>
+     *     <li>On success: caches the authentication data and returns the profile</li>
+     *     <li>On failure: attempts fallback authentication using cached data</li>
+     * </ol>
+     * Fallback authentication validates IP addresses and expiry times based on security settings.
+     * </p>
+     *
+     * @param exchange the HTTP exchange containing username, serverId, and optional IP parameters
+     * @throws IOException if an I/O error occurs during request handling
+     */
     private void handleHasJoined(HttpExchange exchange) throws IOException {
         try {
             String query = exchange.getRequestURI().getQuery();
@@ -71,7 +232,7 @@ public class SessionProxyServer {
                 return;
             }
 
-            platform.sendLogMessage("Authentication request for user: " + username + " (serverId: " + serverId + ")");
+            if (debug) platform.sendLogMessage("Authentication request for user: " + username + " (serverId: " + serverId + ")");
 
             try {
                 String upstreamResponse = forwardToUpstream("/session/minecraft/hasJoined", query);
@@ -79,7 +240,7 @@ public class SessionProxyServer {
                 if (upstreamResponse != null && !upstreamResponse.isEmpty()) {
                     JsonObject profile = gson.fromJson(upstreamResponse, JsonObject.class);
                     database.cacheAuthentication(username, ip, profile);
-                    platform.sendLogMessage("Successfully authenticated " + username + " via Upstream");
+                    if (debug) platform.sendLogMessage("Successfully authenticated " + username + " via Upstream");
                 }
 
                 sendResponse(exchange, 200, upstreamResponse);
@@ -100,7 +261,7 @@ public class SessionProxyServer {
                     }
                 }
 
-                sendResponse(exchange, 204, ""); // No content = authentication failed
+                sendResponse(exchange, 204, "");
             }
 
         } catch (Exception e) {
@@ -110,6 +271,16 @@ public class SessionProxyServer {
         }
     }
 
+    /**
+     * Handles the /session/minecraft/join endpoint for recording player join requests.
+     * <p>
+     * This endpoint is called when a player attempts to join a server. The request
+     * is forwarded directly to Mojang's servers for processing.
+     * </p>
+     *
+     * @param exchange the HTTP exchange containing the join request body
+     * @throws IOException if an I/O error occurs during request handling
+     */
     private void handleJoin(HttpExchange exchange) throws IOException {
         try {
             String body = readRequestBody(exchange);
@@ -123,6 +294,18 @@ public class SessionProxyServer {
         }
     }
 
+    /**
+     * Forwards a GET request to the upstream Mojang session server.
+     * <p>
+     * Sends the request with a configured timeout. Returns the response body
+     * if the status is 200, an empty string if 204, or throws an exception for other codes.
+     * </p>
+     *
+     * @param endpoint the API endpoint path (e.g., "/session/minecraft/hasJoined")
+     * @param query the URL query string containing request parameters
+     * @return the response body from Mojang's servers, or empty string for 204 responses
+     * @throws IOException if the request fails, times out, or returns an error status code
+     */
     private String forwardToUpstream(String endpoint, String query) throws IOException {
         URL url = new URL(upstreamSessionServer + endpoint + "?" + query);
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
@@ -134,12 +317,24 @@ public class SessionProxyServer {
         if (responseCode == 200) {
             return readInputStream(conn.getInputStream());
         } else if (responseCode == 204) {
-            return ""; // No content means auth failed
+            return "";
         }
 
         throw new IOException("Upstream returned status: " + responseCode);
     }
 
+    /**
+     * Forwards a POST request to the upstream Mojang session server.
+     * <p>
+     * Sends the request body as JSON with a configured timeout.
+     * Returns an empty string if the status is 204, or throws an exception for other codes.
+     * </p>
+     *
+     * @param endpoint the API endpoint path (e.g., "/session/minecraft/join")
+     * @param body the JSON request body to send
+     * @return an empty string if successful (204 status)
+     * @throws IOException if the request fails, times out, or returns an error status code
+     */
     private String forwardToUpstreamPost(String endpoint, String body) throws IOException {
         URL url = new URL(upstreamSessionServer + endpoint);
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
@@ -161,6 +356,18 @@ public class SessionProxyServer {
         throw new IOException("Upstream returned status: " + responseCode);
     }
 
+    /**
+     * Sends an HTTP response to the client.
+     * <p>
+     * Handles proper encoding and content-length headers. For 204 (No Content) responses,
+     * sends -1 as the content length. Closes the exchange after sending the response.
+     * </p>
+     *
+     * @param exchange the HTTP exchange to send the response through
+     * @param statusCode the HTTP status code to return
+     * @param response the response body content
+     * @throws IOException if an I/O error occurs while sending the response
+     */
     private void sendResponse(HttpExchange exchange, int statusCode, String response) throws IOException {
         byte[] bytes = response.getBytes(StandardCharsets.UTF_8);
         exchange.sendResponseHeaders(statusCode, statusCode == 204 ? -1 : bytes.length);
@@ -174,6 +381,17 @@ public class SessionProxyServer {
         exchange.close();
     }
 
+    /**
+     * Reads an InputStream and converts it to a String.
+     * <p>
+     * Uses UTF-8 encoding and reads line by line, concatenating all lines
+     * into a single string. Automatically closes the BufferedReader.
+     * </p>
+     *
+     * @param is the InputStream to read from
+     * @return the complete content of the stream as a String
+     * @throws IOException if an I/O error occurs while reading
+     */
     private String readInputStream(InputStream is) throws IOException {
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8))) {
             StringBuilder sb = new StringBuilder();
@@ -185,10 +403,27 @@ public class SessionProxyServer {
         }
     }
 
+    /**
+     * Reads the request body from an HTTP exchange.
+     *
+     * @param exchange the HTTP exchange containing the request body
+     * @return the request body as a String
+     * @throws IOException if an I/O error occurs while reading the body
+     */
     private String readRequestBody(HttpExchange exchange) throws IOException {
         return readInputStream(exchange.getRequestBody());
     }
 
+    /**
+     * Parses a URL query string into key-value pairs.
+     * <p>
+     * Decodes URL-encoded parameter values using UTF-8 encoding.
+     * Silently ignores malformed parameters or encoding errors.
+     * </p>
+     *
+     * @param query the query string to parse (e.g., "username=Player&serverId=abc123")
+     * @return a QueryParams object containing the parsed parameters
+     */
     private QueryParams parseQuery(String query) {
         QueryParams params = new QueryParams();
         if (query == null) return params;
@@ -199,20 +434,37 @@ public class SessionProxyServer {
                 try {
                     params.put(pair[0], URLDecoder.decode(pair[1], "UTF-8"));
                 } catch (UnsupportedEncodingException e) {
-                    // UTF-8 is always supported
                 }
             }
         }
         return params;
     }
 
+    /**
+     * Simple container for URL query parameters.
+     * <p>
+     * Provides basic key-value storage for parsed query string parameters.
+     * </p>
+     */
     private static class QueryParams {
-        private final java.util.Map<String, String> params = new java.util.HashMap<>();
+        private final java.util.HashMap<String, String> params = new java.util.HashMap<>();
 
+        /**
+         * Stores a key-value pair.
+         *
+         * @param key the parameter name
+         * @param value the parameter value
+         */
         void put(String key, String value) {
             params.put(key, value);
         }
 
+        /**
+         * Retrieves the value for a given parameter name.
+         *
+         * @param key the parameter name
+         * @return the parameter value, or null if not found
+         */
         String get(String key) {
             return params.get(key);
         }
