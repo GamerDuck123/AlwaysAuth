@@ -2,6 +2,8 @@ plugins {
     id("com.modrinth.minotaur")
 }
 
+val libs = extensions.getByType(VersionCatalogsExtension::class.java).named("libs")
+
 modrinth {
     versionNumber.set("${version as String}-${name}")
     loaders.addAll(
@@ -18,12 +20,12 @@ modrinth {
         "fabric" -> tasks.named<net.fabricmc.loom.task.RemapJarTask>("remapJar")
         "neoforge" -> tasks.named<Jar>("jar")
         "paper" -> tasks.named<Jar>("jar")
-        "spigot" -> tasks.named<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("shadowJar")
-        "velocity" -> tasks.named<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("shadowJar")
+        "spigot" -> tasks.named<Jar>("jar")
+        "velocity" -> tasks.named<Jar>("jar")
         else -> throw IllegalStateException("Unknown loader $name")
     })
 
-    gameVersions.addAll(rootProject.property("minecraft_version") as String)
+    gameVersions.addAll(libs.findVersion("minecraft").get().toString())
     token.set(System.getenv("MODRINTH_TOKEN"))
     projectId.set(rootProject.property("modrinthID") as String)
     versionType.set(rootProject.property("versionType") as String)

@@ -4,6 +4,7 @@ plugins {
     id("io.papermc.hangar-publish-plugin")
 }
 
+val libs = extensions.getByType(VersionCatalogsExtension::class.java).named("libs")
 
 hangarPublish {
     publications.register("plugin") {
@@ -19,21 +20,16 @@ hangarPublish {
                     register(Platforms.PAPER) {
                         jar.set(tasks.named<Jar>("jar").flatMap { it.archiveFile })
 
-                        val versions: List<String> = (property("minecraft_version") as String)
-                            .split(",")
-                            .map { it.trim() }
-                        platformVersions.set(versions)
+                        platformVersions.set(listOf<String>(libs.findVersion("minecraft").get().toString()))
                     }
                 }
                 "velocity" -> {
                     register(Platforms.VELOCITY) {
                         jar.set(tasks.named<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("shadowJar").flatMap { it.archiveFile })
 
-                        val versions: List<String> = (property("minecraft_version") as String)
-                            .split(",")
-                            .map { it.trim() }
-                        platformVersions.set(versions)
+                        platformVersions.set(listOf<String>(libs.findVersion("velocity").get().toString()))
                     }
+
                 }
                 else -> throw IllegalStateException("Unknown loader $name")
             }

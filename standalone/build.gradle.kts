@@ -1,3 +1,7 @@
+plugins {
+    id("standalone-plugin")
+}
+
 dependencies {
     implementation(libs.authlib)
 

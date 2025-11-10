@@ -3,6 +3,10 @@ plugins {
     `maven-publish`
 }
 
+base {
+    archivesName.set("${rootProject.name}-${name}")
+}
+
 repositories {
     maven("https://jitpack.io/")
     maven("https://libraries.minecraft.net")

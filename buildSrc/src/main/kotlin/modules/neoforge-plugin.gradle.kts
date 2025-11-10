@@ -3,6 +3,8 @@ plugins {
     id("idea")
 
     id("net.neoforged.moddev")
+    id("modrinth-plugin")
+    id("curseforge-plugin")
 }
 
 repositories {

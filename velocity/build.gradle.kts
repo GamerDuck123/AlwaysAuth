@@ -1,3 +1,7 @@
+plugins {
+    id("velocity-plugin")
+}
+
 dependencies {
     compileOnly(libs.velocity)
     annotationProcessor(libs.velocity)

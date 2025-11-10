@@ -2,6 +2,8 @@ plugins {
     id("net.darkhax.curseforgegradle")
 }
 
+val libs = extensions.getByType(VersionCatalogsExtension::class.java).named("libs")
+
 tasks.register("publishCurseForge", net.darkhax.curseforgegradle.TaskPublishCurseForge::class) {
     apiToken = System.getenv("CURSEFORGE_TOKEN")
 
@@ -18,7 +20,8 @@ tasks.register("publishCurseForge", net.darkhax.curseforgegradle.TaskPublishCurs
             "neoforge" -> "NeoForge"
             else -> throw IllegalStateException("Unknown loader $name")
         })
-    mainFile.addGameVersion(rootProject.property("minecraft_version") as String)
+
+    mainFile.addGameVersion(libs.findVersion("minecraft").get().toString())
     mainFile.releaseType = property("versionType") as String
     mainFile.displayName = "${project.version as String}-${project.name}"
     mainFile.changelog = rootProject.file("CHANGELOG.md").readText()

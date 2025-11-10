@@ -1,5 +1,6 @@
-import org.gradle.kotlin.dsl.dependencies
-import org.gradle.kotlin.dsl.exclude
+plugins {
+    id("spigot-plugin")
+}
 
 dependencies {
     compileOnly("org.spigotmc:spigot-api:${libs.versions.minecraft.get()}-R0.1-SNAPSHOT")

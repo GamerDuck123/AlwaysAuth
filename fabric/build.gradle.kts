@@ -1,3 +1,7 @@
+plugins {
+    id("fabric-plugin")
+}
+
 dependencies {
     minecraft(libs.minecraft)
 
@@ -34,19 +38,6 @@ tasks.register<Copy>("copyCommonSources") {
         }
     }
 
-//    Fill in default config from commons
-//    from("$rootDir/common/src/main/resources/templates") {
-//        include("${project.property("modid")}.properties")
-//        into("common/resources")
-//        includeEmptyDirs = false
-//
-//        filesMatching("**/${project.property("modid")}.properties") {
-//            expand(mapOf(
-//                "default_path" to "plugins/${project.name}/storage",
-//            ))
-//        }
-//    }
-
 
     into("${layout.buildDirectory}/generated/sources")
 }
@@ -67,7 +58,6 @@ tasks.named<JavaCompile>("compileJava") {
 }
 
 loom {
-//    splitEnvironmentSourceSets()
     accessWidenerPath.set(file("../common/src/main/resources/${project.property("modid")}.accesswidener"))
 
     mods {

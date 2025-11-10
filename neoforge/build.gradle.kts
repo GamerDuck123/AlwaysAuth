@@ -1,4 +1,7 @@
-import net.neoforged.nfrtgradle.CreateMinecraftArtifacts
+plugins {
+    id("neoforge-plugin")
+}
+
 dependencies {
     implementation(libs.h2)
     implementation(libs.mysql)
@@ -60,7 +63,7 @@ tasks.named<JavaCompile>("compileJava") {
     dependsOn("copyCommonSources")
 }
 
-tasks.named<CreateMinecraftArtifacts>("createMinecraftArtifacts") {
+tasks.named("createMinecraftArtifacts") {
     dependsOn("copyCommonSources")
 }
 
