@@ -3,6 +3,7 @@ package me.gamerduck.alwaysauth;
 import me.gamerduck.alwaysauth.api.AuthDatabase;
 import me.gamerduck.alwaysauth.api.SessionConfig;
 import me.gamerduck.alwaysauth.api.SessionProxyServer;
+import me.gamerduck.alwaysauth.api.updates.ModrinthUpdateChecker;
 
 import java.nio.file.Path;
 import java.util.logging.Logger;
@@ -117,6 +118,20 @@ public abstract class Platform<CS> {
      * @param msg the warning message to log
      */
     public abstract void sendWarningLogMessage(String msg);
+
+    /**
+     * Gets the update message if updates is enabled and there is a new update available.
+     *
+     * @return the update message
+     */
+    public String getUpdateMessage() {
+        if (config.getUpdates() && ModrinthUpdateChecker.hasNewer()) {
+            return "\u00A7cHey there is a new update for AlwaysAuth! " +
+                    "\u00A7cPlease update soon for the latest and best features! https://modrinth.com/plugin/alwaysauth/versions";
+        } else {
+            return null;
+        }
+    }
 
     /**
      * Handles platform shutdown and cleanup.

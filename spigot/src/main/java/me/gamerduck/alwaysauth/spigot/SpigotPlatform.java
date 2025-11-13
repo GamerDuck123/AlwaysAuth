@@ -4,16 +4,22 @@ import me.gamerduck.alwaysauth.Platform;
 import me.gamerduck.alwaysauth.reflection.AuthenticationURLReplacer;
 import me.gamerduck.alwaysauth.reflection.ServerPropertiesReplacer;
 import org.bukkit.command.CommandSender;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.logging.Logger;
 
-public class SpigotPlatform extends Platform<CommandSender> {
+public class SpigotPlatform extends Platform<CommandSender> implements Listener {
 
     private static final Logger LOGGER = Logger.getLogger("AlwaysAuth");
 
     public SpigotPlatform(JavaPlugin bootstrap) {
         super(bootstrap.getDataFolder().toPath());
+
+        String message = getUpdateMessage();
+        if (message != null) sendLogMessage(message);
 
         AuthenticationURLReplacer.replaceSessionService(this, config().getSessionServerUrl());
         ServerPropertiesReplacer.forcePreventProxyConnections(this);
@@ -64,4 +70,11 @@ public class SpigotPlatform extends Platform<CommandSender> {
         LOGGER.warning(msg.replaceAll("§.", ""));
     }
 
+    @EventHandler
+    public void onJoin(PlayerJoinEvent event) {
+        if (event.getPlayer().hasPermission("alwaysauth.admin")) {
+            String message = getUpdateMessage();
+            if (message != null) event.getPlayer().sendMessage(message);
+        }
+    }
 }

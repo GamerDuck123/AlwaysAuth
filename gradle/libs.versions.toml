@@ -26,6 +26,7 @@ fabric-loom="1.11-SNAPSHOT"
 minotaur="2.8.10"
 curseforge="1.1.26"
 hangar="0.1.3"
+github-release="2.5.2"
 
 [libraries]
 # Project General
@@ -52,6 +53,7 @@ fabric-loom = { group = "fabric-loom", name = "fabric-loom.gradle.plugin", versi
 minotaur = { group = "com.modrinth.minotaur", name = "Minotaur", version.ref = "minotaur" }
 curseforge = { group = "net.darkhax.curseforgegradle", name = "net.darkhax.curseforgegradle.gradle.plugin", version.ref = "curseforge" }
 hangar = { group = "io.papermc.hangar-publish-plugin", name = "io.papermc.hangar-publish-plugin.gradle.plugin", version.ref = "hangar" }
+github-release = { group = "com.github.breadmoirai", name = "github-release", version.ref = "github-release" }
 
 [bundles]
 build = [
@@ -61,5 +63,6 @@ build = [
     "fabric-loom",
     "minotaur",
     "curseforge",
-    "hangar"
+    "hangar",
+    "github-release"
 ]

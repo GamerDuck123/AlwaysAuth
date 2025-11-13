@@ -3,6 +3,7 @@ plugins {
     id("modrinth-plugin")
     id("hangar-plugin")
     id("com.gradleup.shadow")
+    id("github-plugin")
 }
 
 repositories {

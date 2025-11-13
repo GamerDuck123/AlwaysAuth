@@ -20,6 +20,7 @@ tasks {
         dependsOn(subprojects.filter { it.name in listOf("paper", "fabric", "neoforge", "spigot", "velocity") }.map { it.tasks.named("modrinth") })
         dependsOn(subprojects.filter { it.name in listOf("paper", "velocity") }.map { it.tasks.named("publishPluginPublicationToHangar") })
         dependsOn(subprojects.filter { it.name in listOf("fabric", "neoforge") }.map { it.tasks.named("publishCurseForge") })
+        dependsOn(subprojects.filter { it.name in listOf("standalone", "paper", "fabric", "neoforge", "spigot", "velocity") }.map { it.tasks.named("githubRelease") })
     }
 
     assemble {
@@ -34,5 +35,14 @@ tasks {
         dependsOn(subprojects.filter { it.name !in listOf("common") }.map {
             it.tasks.named("copyCommonSources")
         })
+    }
+    withType<JavaCompile>().configureEach {
+        enabled = false
+    }
+    named("jar").configure {
+        enabled = false
+    }
+    named("build").configure {
+        enabled = false
     }
 }

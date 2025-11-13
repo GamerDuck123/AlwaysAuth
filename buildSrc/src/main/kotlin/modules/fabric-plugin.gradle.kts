@@ -4,6 +4,7 @@ plugins {
     id("fabric-loom")
     id("modrinth-plugin")
     id("curseforge-plugin")
+    id("github-plugin")
 }
 
 repositories {

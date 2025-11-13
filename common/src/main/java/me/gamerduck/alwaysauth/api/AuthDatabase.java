@@ -61,7 +61,7 @@ public class AuthDatabase {
 
             initializeTables();
 
-            if (platform.isDebug()) {
+            if (platform.config().getDebug()) {
                 platform.sendLogMessage("H2 database initialized at: " + dbFile.getAbsolutePath() + ".mv.db");
                 platform.sendLogMessage("Database encryption: ENABLED (AES-256-GCM)");
             }
@@ -115,7 +115,7 @@ public class AuthDatabase {
 
             initializeTables();
 
-            if (platform.isDebug()) {
+            if (platform.config().getDebug()) {
                 platform.sendLogMessage("Remote database connection established to " + host + ":" + port + "/" + database);
                 platform.sendLogMessage("Database encryption: ENABLED (AES-256-GCM)");
             }
@@ -172,9 +172,6 @@ public class AuthDatabase {
             long timestamp = System.currentTimeMillis();
 
             String encryptedIp = encryptionHelper.encrypt(ip != null ? ip : "unknown");
-            String encryptedProfile = platform.config().isEncryptProfileData()
-                    ? encryptionHelper.encrypt(profileJson)
-                    : profileJson;
 
             String sql;
             if (isRemote) {
@@ -197,7 +194,7 @@ public class AuthDatabase {
                 pstmt.setString(2, uuid);
                 pstmt.setString(3, encryptedIp);
                 pstmt.setLong(4, timestamp);
-                pstmt.setString(5, encryptedProfile);
+                pstmt.setString(5, profileJson);
                 pstmt.executeUpdate();
             }
 
@@ -261,11 +258,7 @@ public class AuthDatabase {
                             }
                         }
 
-                        if (platform.config().isEncryptProfileData()) {
-                            return encryptionHelper.decrypt(profileData);
-                        } else {
-                            return profileData;
-                        }
+                        return profileData;
                     }
                 }
             }

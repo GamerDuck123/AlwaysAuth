@@ -11,6 +11,13 @@ tasks.register<Copy>("copyCommonSources") {
     from("$rootDir/common/src/main/java") {
         exclude("me/gamerduck/${project.property("modid")}/mixin/**")
         into("common/java")
+
+        filter { line: String ->
+            line.replace("@version@", project.version.toString())
+        }
+        filter { line: String ->
+            line.replace("@modrinthToken@", project.property("modrinthID") as String)
+        }
     }
     from("$rootDir/common/src/main/resources") {
         exclude("META-INF/**")

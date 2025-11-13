@@ -1,10 +1,13 @@
 package me.gamerduck.alwaysauth.neoforge;
 
 import net.minecraft.commands.Commands;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
 import net.neoforged.neoforge.event.server.ServerStoppingEvent;
 
@@ -31,6 +34,14 @@ public class AlwaysAuthMod {
     @SubscribeEvent
     public void onServerStop(ServerStoppingEvent event) {
         neoForgePlatform.onDisable();
+    }
+
+    @SubscribeEvent
+    public void onPlayerJoin(PlayerEvent.PlayerLoggedInEvent event) {
+        if (event.getEntity().getPermissionLevel() >= 4) {
+            String message = neoForgePlatform.getUpdateMessage();
+            if (message != null) ((ServerPlayer) event.getEntity()).sendSystemMessage(Component.literal(message));
+        }
     }
 
     @SubscribeEvent

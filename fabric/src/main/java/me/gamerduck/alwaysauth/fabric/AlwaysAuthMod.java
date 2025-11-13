@@ -2,8 +2,10 @@ package me.gamerduck.alwaysauth.fabric;
 
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
+import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.minecraft.commands.Commands;
+import net.minecraft.network.chat.Component;
 
 public class AlwaysAuthMod implements ModInitializer {
     private static FabricPlatform fabricPlatform;
@@ -76,6 +78,12 @@ public class AlwaysAuthMod implements ModInitializer {
         ServerLifecycleEvents.SERVER_STOPPING.register(server -> {
             if (server.isDedicatedServer()) {
                 fabricPlatform.onDisable();
+            }
+        });
+        ServerPlayerEvents.JOIN.register(player -> {
+            if (player.getPermissionLevel() >= 4) {
+                String message = fabricPlatform.getUpdateMessage();
+                if (message != null) player.sendSystemMessage(Component.literal(message));
             }
         });
     }

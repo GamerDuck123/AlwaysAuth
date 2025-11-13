@@ -5,12 +5,14 @@ import com.mojang.brigadier.Command;
 import com.velocitypowered.api.command.BrigadierCommand;
 import com.velocitypowered.api.command.CommandManager;
 import com.velocitypowered.api.event.Subscribe;
+import com.velocitypowered.api.event.player.configuration.PlayerFinishedConfigurationEvent;
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent;
 import com.velocitypowered.api.event.proxy.ProxyShutdownEvent;
 import com.velocitypowered.api.plugin.Plugin;
 import com.velocitypowered.api.plugin.annotation.DataDirectory;
 import com.velocitypowered.api.proxy.ProxyServer;
 import me.gamerduck.alwaysauth.velocity.api.LibraryResolver;
+import net.kyori.adventure.text.Component;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -119,6 +121,15 @@ public class AlwaysAuthPlugin {
 
     @Subscribe
     public void onProxyInitialization(ProxyShutdownEvent event) {
+        velocityPlatform.onDisable();
+    }
+
+    @Subscribe
+    public void onPlayerJoin(PlayerFinishedConfigurationEvent event) {
+        if (event.player().hasPermission("alwaysauth.admin")) {
+            String message = velocityPlatform.getUpdateMessage();
+            if (message != null) event.player().sendMessage(Component.text(message));
+        }
         velocityPlatform.onDisable();
     }
 }

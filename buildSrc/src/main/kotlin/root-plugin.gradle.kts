@@ -19,6 +19,9 @@ java {
 }
 
 tasks {
+    jar {
+        destinationDirectory.set(file("${rootProject.layout.projectDirectory}/build/all"))
+    }
     compileJava {
         options.encoding = Charsets.UTF_8.name()
         options.release.set(21)

@@ -40,6 +40,7 @@ public class SessionProxyServer {
     private final Platform platform;
     private final String upstreamSessionServer;
     private final Boolean debug;
+    private final String secretKey;
 
     /**
      * Gets the authentication database instance.
@@ -68,6 +69,7 @@ public class SessionProxyServer {
         this.gson = new Gson();
         this.config = config;
         this.debug = platform.isDebug();
+        this.secretKey = config.getSecretKey();
 
         if (config.isRemoteDatabase()) {
             this.database = new AuthDatabase(
@@ -136,20 +138,8 @@ public class SessionProxyServer {
      * @return true if the token is valid or authentication is disabled, false otherwise
      */
     private boolean verifyAuthToken(String providedToken) {
-        if (!config.isAuthenticationEnabled()) {
-            return true;
-        }
-
-        if (providedToken == null) {
-            return false;
-        }
-
-        String currentToken = config.getSecretKey();
-        if (providedToken.equals(currentToken)) {
-            return true;
-        }
-
-        return false;
+        if (!config.isAuthenticationEnabled()) return true;
+        return providedToken != null && providedToken.equals(secretKey);
     }
 
     /**

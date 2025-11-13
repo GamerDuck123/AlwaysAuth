@@ -9,6 +9,7 @@ dependencies {
     implementation(libs.extras)
     annotationProcessor(libs.extras)
 
+    implementation(libs.gson)
     implementation(libs.authlib)
 }
 

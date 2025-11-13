@@ -14,6 +14,8 @@ public class FabricPlatform extends Platform<CommandSourceStack> {
 
     public FabricPlatform(MinecraftServer minecraftServer) {
         super(minecraftServer.getServerDirectory().resolve("config/AlwaysAuth"));
+        String message = getUpdateMessage();
+        if (message != null) sendLogMessage(message);
     }
 
     @Override

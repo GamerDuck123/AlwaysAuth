@@ -5,6 +5,7 @@ import me.gamerduck.alwaysauth.Platform;
 import java.io.*;
 import java.security.SecureRandom;
 import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * Configuration manager for AlwaysAuth session server settings.
@@ -30,6 +31,7 @@ public class SessionConfig {
     private final Platform platform;
 
     private static final boolean DEFAULT_DEBUG = false;
+    private static final boolean DEFAULT_UPDATE_CHECKS = true;
 
     private static final String DEFAULT_IP_ADDRESS = "127.0.0.1";
     private static final int DEFAULT_PORT = 8765;
@@ -47,7 +49,6 @@ public class SessionConfig {
 
     private static final String DEFAULT_UPSTREAM_SESSION_SERVER = "https://sessionserver.mojang.com";
     private static final boolean DEFAULT_AUTHENTICATION_ENABLED = true; // PATH-based auth works!
-    private static final boolean DEFAULT_ENCRYPT_PROFILE_DATA = false;
 
     /**
      * Constructs a new SessionConfig instance.
@@ -132,7 +133,6 @@ public class SessionConfig {
                         properties.put(key, defaults.get(key));
                         comments.put(key, defaultComments.get(key));
                         configChanged = true;
-                        platform.sendLogMessage("Added new config option: " + key);
                     }
                 }
 
@@ -142,7 +142,6 @@ public class SessionConfig {
                         filtered.put(entry.getKey(), entry.getValue());
                     } else {
                         configChanged = true;
-                        platform.sendLogMessage("Removed deprecated config option: " + entry.getKey());
                     }
                 }
 
@@ -206,17 +205,27 @@ public class SessionConfig {
     private void setDefaults() {
         properties.clear();
         comments.clear();
+        addComment("###################################\n"
+                + "#                                 #\n"
+                + "#    Always Auth Configuration    #\n"
+                + "#                                 #\n"
+                + "###################################");
         setProperty("debug", String.valueOf(DEFAULT_DEBUG), "Whether or not there should be debug message\n# This won't work on the standalone jar");
-
+        setProperty("check-updates", String.valueOf(DEFAULT_UPDATE_CHECKS), "Check for updates and notify staff (and console) on join who have the permission alwaysauth.admin");
         // Server settings
         setProperty("ip-address", DEFAULT_IP_ADDRESS, "The ip for the session server\n# If set anything other than 127.0.0.1 or 0.0.0.0 (allows public access), it will treat as external server\n# An external server means only port needs to be set (to match that external server) and it will use that to authenticate.\n# Please note as of right now you will not see console logs on the server if you are using an external server");
         setProperty("port", String.valueOf(DEFAULT_PORT), "Port for the session server");
 
         // Security settings
+        addComment("\n###########################\n"
+                + "#    Security Settings    #\n"
+                + "###########################");
         setProperty("authentication-enabled", String.valueOf(DEFAULT_AUTHENTICATION_ENABLED), "Enable HMAC-SHA256 signature verification for authorized servers\n# Currently DISABLED by default due to Minecraft URL handling limitations\n# Use firewall rules or localhost restriction for access control instead\n# Database encryption works regardless of this setting");
         setProperty("secret-key", generateSecretKey(), "Secret key for database encryption (auto-generated)\n# KEEP THIS SECRET! Used to encrypt IP addresses and profile data in database\n# If deleted database will need to also be reset!\n# To regenerate, delete this line and restart the server");
-        setProperty("encrypt-profile-data", String.valueOf(DEFAULT_ENCRYPT_PROFILE_DATA), "Encrypt player profile data in database (JSON with skins/capes)\n# IP addresses are ALWAYS encrypted\n# Set to true for maximum privacy (slight performance impact)");
 
+        addComment("\n###########################\n"
+                + "#    Fallback Settings    #\n"
+                + "###########################");
         // Fallback settings
         setProperty("fallback-enabled", String.valueOf(DEFAULT_FALLBACK_ENABLED), "Enable session fallback when Mojang servers are down");
         setProperty("max-offline-hours", String.valueOf(DEFAULT_MAX_OFFLINE_HOURS), "Maximum hours a player can stay offline before requiring re-authentication (0 = always require)");
@@ -224,6 +233,9 @@ public class SessionConfig {
         setProperty("security-level", "basic", "Security level: 'basic' (always verify) or 'medium' (use max-offline-hours)");
         setProperty("upstream-server", "https://sessionserver.mojang.com", "Upstream Session Server URL\n# Default is Mojang's official one but this option is here to work with things like minehut's external servers");
 
+        addComment("\n###########################\n"
+                + "#    Database Settings    #\n"
+                + "###########################");
         // Database settings
         setProperty("database.type", DEFAULT_DB_TYPE, "Database type: h2, mysql, or mariadb");
         setProperty("database.host", DEFAULT_DB_HOST, "Database host (not used for H2)");
@@ -263,9 +275,35 @@ public class SessionConfig {
     private void setProperty(String key, String value, String comment) {
         properties.put(key, value);
         if (comment != null && !comment.isEmpty()) {
-            if (comment.contains("\n")) Arrays.stream(comment.split("\n")).forEachOrdered(line -> comments.put(key, comment));
-            else comments.put(key, comment);
+            comments.put(key, comment);
         }
+    }
+
+    /**
+     * Adds a standalone comment or section header to the config file.
+     * <p>
+     * The comment will appear exactly where this method is called in relation to other
+     * properties and comments, maintaining the order defined in setDefaults().
+     * You handle all formatting yourself - the text you provide will be written
+     * as-is to the config file without any modification or prefix.
+     * </p>
+     * <p>
+     * This is useful for adding section headers or visual separators in the config file.
+     * For example:
+     * <pre>
+     * addComment("# ========================================");
+     * addComment("#           Database Settings");
+     * addComment("# ========================================");
+     * setProperty("database.type", "h2", "Database type");
+     * </pre>
+     * </p>
+     *
+     * @param commentText the text to write to the config file (you handle formatting)
+     */
+    private void addComment(String commentText) {
+        String commentKey = "__COMMENT__" + ThreadLocalRandom.current().nextInt();
+        properties.put(commentKey, "");
+        comments.put(commentKey, commentText);
     }
 
     /**
@@ -278,32 +316,29 @@ public class SessionConfig {
      */
     public void saveConfig() {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(configFile))) {
-            writer.write("###################################");
-            writer.newLine();
-            writer.write("#                                 #");
-            writer.newLine();
-            writer.write("#    Always Auth Configuration    #");
-            writer.newLine();
-            writer.write("#                                 #");
-            writer.newLine();
-            writer.write("###################################");
-            writer.newLine();
-            writer.newLine();
-
             for (Map.Entry<String, String> entry : properties.entrySet()) {
                 String key = entry.getKey();
                 String value = entry.getValue();
 
-                // Write comment if exists
-                if (comments.containsKey(key)) {
-                    writer.write("# " + comments.get(key));
+                // Check if this is a header (standalone comment)
+                if (key.startsWith("__COMMENT__")) {
+                    // Only write the comment, not the property
+                    if (comments.containsKey(key)) {
+                        writer.write(comments.get(key));
+                        writer.newLine();
+                    }
+                    writer.newLine();
+                } else {
+                    // Regular property - write comment if exists
+                    if (comments.containsKey(key)) {
+                        writer.write("# " + comments.get(key));
+                        writer.newLine();
+                    }
+
+                    // Write property
+                    writer.write(key + "=" + value);
                     writer.newLine();
                 }
-
-                // Write property
-                writer.write(key + "=" + value);
-                writer.newLine();
-                writer.newLine();
             }
 
             platform.sendLogMessage("Configuration saved to " + configFile.getName());
@@ -331,6 +366,15 @@ public class SessionConfig {
     }
 
     /**
+     * Checks if updates are enabled.
+     *
+     * @return true if updates are enabled, false otherwise
+     */
+    public Boolean getUpdates() {
+        return Boolean.parseBoolean(properties.getOrDefault("check-updates", String.valueOf(DEFAULT_UPDATE_CHECKS)));
+    }
+
+    /**
      * Checks if authentication is enabled for the /auth endpoint.
      *
      * @return true if token authentication is required, false otherwise
@@ -346,15 +390,6 @@ public class SessionConfig {
      */
     public String getSecretKey() {
         return properties.getOrDefault("secret-key", generateSecretKey());
-    }
-
-    /**
-     * Checks if profile data encryption is enabled.
-     *
-     * @return true if player profile data should be encrypted in the database, false otherwise
-     */
-    public boolean isEncryptProfileData() {
-        return Boolean.parseBoolean(properties.getOrDefault("encrypt-profile-data", String.valueOf(DEFAULT_ENCRYPT_PROFILE_DATA)));
     }
 
     /**

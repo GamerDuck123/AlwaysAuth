@@ -14,6 +14,8 @@ public class NeoForgePlatform extends Platform<CommandSourceStack> {
 
     public NeoForgePlatform(MinecraftServer minecraftServer) {
         super(minecraftServer.getServerDirectory().resolve("config/AlwaysAuth"));
+        String message = getUpdateMessage();
+        if (message != null) sendLogMessage(message);
     }
 
     @Override

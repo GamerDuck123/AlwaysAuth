@@ -1,5 +1,14 @@
-# 0.0.2 - Slim Jars + Dependencies Fixed
+# v0.4.0 - Update Checker
 
-The dependencies for Paper and Spigot were improperly setup so databases were unable to connect too, this should now be fixed.
+## Update Checker
+I have added a simple update checker so that you can always be notified when there is
+a new release! It will notify the staff with the permission alwaysauth.admin and notify
+console when the server is started.
 
-As well as Velocity going from 11MB -> 33KB as I implemented a dependency downloader that downloads libraries at runtime. 
+This feature can be disabled within the config by disabling `check-updates`
+
+---
+
+## Other Things
+I aso removed some annoying debug messages that were left over from me testing the
+config system. As well as some other non-necessary messages

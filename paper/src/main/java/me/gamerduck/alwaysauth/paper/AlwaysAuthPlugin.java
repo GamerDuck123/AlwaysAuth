@@ -13,6 +13,7 @@ public class AlwaysAuthPlugin extends JavaPlugin {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+        this.getServer().getPluginManager().registerEvents(paperPlatform, this);
     }
 
     @Override
