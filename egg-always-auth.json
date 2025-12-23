@@ -43,16 +43,6 @@
             "sort": 1
         },
         {
-            "name": "PORT",
-            "description": "The port number to use.",
-            "env_variable": "PORT",
-            "default_value": "8765",
-            "user_viewable": true,
-            "user_editable": true,
-            "rules": [],
-            "sort": 2
-        },
-        {
             "name": "VERSION",
             "description": "The version of AlwaysAuth to install. Use \"latest\" to install the latest version.",
             "env_variable": "VERSION",
