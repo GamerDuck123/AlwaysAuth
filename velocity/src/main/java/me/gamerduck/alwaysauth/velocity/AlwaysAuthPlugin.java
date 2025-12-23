@@ -104,9 +104,9 @@ public class AlwaysAuthPlugin {
         }
         LibraryResolver resolver = new LibraryResolver();
         resolver.addDependency("com.h2database:h2:2.3.232");
-        resolver.addDependency("mysql:mysql-connector-java:8.0.33");
+        resolver.addDependency("com.mysql:mysql-connector-j:8.0.33");
         resolver.addDependency("org.mariadb.jdbc:mariadb-java-client:3.3.2");
-        resolver.addRepository("https://repo1.maven.org/maven2");
+        resolver.addRepository("https://repo.papermc.io/repository/maven-public/");
         try {
             resolver.resolveDependencies(libraries, server.getPluginManager(), this);
         } catch (Exception e) {
@@ -127,9 +127,7 @@ public class AlwaysAuthPlugin {
     @Subscribe
     public void onPlayerJoin(PlayerFinishedConfigurationEvent event) {
         if (event.player().hasPermission("alwaysauth.admin")) {
-            String message = velocityPlatform.getUpdateMessage();
-            if (message != null) event.player().sendMessage(Component.text(message));
+            velocityPlatform.getUpdateMessage().ifPresent(msg -> event.player().sendMessage(Component.text(msg)));
         }
-        velocityPlatform.onDisable();
     }
 }

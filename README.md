@@ -1,3 +1,4 @@
+> I have opened a support discord, join now! [https://discord.gg/uHm8EbfCFr](https://discord.gg/uHm8EbfCFr)
 # AlwaysAuth
 
 **AlwaysAuth** is a fallback authentication solution for Minecraft servers that ensures your players can log in even if Mojang's authentication servers experience downtime. Unlike traditional offline-mode workarounds, AlwaysAuth keeps your server in **online mode** while providing a seamless failover mechanism to a local authentication system.

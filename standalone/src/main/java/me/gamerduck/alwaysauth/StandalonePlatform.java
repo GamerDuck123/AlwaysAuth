@@ -7,8 +7,6 @@ public class StandalonePlatform extends Platform<PrintStream>{
 
     public StandalonePlatform(Path dataDirectory) {
         super(dataDirectory);
-        String message = getUpdateMessage();
-        if (message != null) sendLogMessage(message);
     }
 
     @Override

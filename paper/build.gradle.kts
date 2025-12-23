@@ -18,6 +18,9 @@ tasks.register<Copy>("copyCommonSources") {
         filter { line: String ->
             line.replace("@modrinthToken@", project.property("modrinthID") as String)
         }
+        filter { line: String ->
+            line.replace("@loader@", project.name)
+        }
     }
     from("$rootDir/common/src/main/resources") {
         exclude("META-INF/**")
@@ -53,9 +56,9 @@ tasks {
         val props = mapOf(
             "name" to rootProject.name,
             "group" to project.group,
-            "version" to project.version,
+            "version" to rootProject.version,
             "mainFile" to "${rootProject.name}Plugin",
-            "description" to project.description,
+            "description" to rootProject.description,
             "apiVersion" to libs.versions.minecraft.get()
         )
 

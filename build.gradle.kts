@@ -8,7 +8,7 @@ rootProject.group = project.property("group") as String
 rootProject.version = project.property("version") as String
 rootProject.description = project.property("description") as String
 
-subprojects {
+allprojects {
     if (this.name != rootProject.name) {
         project.version = rootProject.version
         project.group = "${rootProject.group}.${this.name}"

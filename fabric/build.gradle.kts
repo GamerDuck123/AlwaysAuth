@@ -32,6 +32,9 @@ tasks.register<Copy>("copyCommonSources") {
         filter { line: String ->
             line.replace("@modrinthToken@", project.property("modrinthID") as String)
         }
+        filter { line: String ->
+            line.replace("@loader@", project.name)
+        }
     }
 
 
@@ -82,7 +85,7 @@ tasks {
         val props = mapOf(
             "name" to rootProject.name,
             "group" to project.group,
-            "version" to project.version,
+            "version" to rootProject.version,
             "modid" to rootProject.property("modid"),
             "mainFile" to "${rootProject.name}Mod",
             "description" to project.description,

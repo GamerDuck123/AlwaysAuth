@@ -18,16 +18,10 @@ public class AlwaysAuthMod {
 
     public AlwaysAuthMod() {
         NeoForge.EVENT_BUS.register(this);
-    }
-
-    @SubscribeEvent
-    public void onServerStarting(ServerStartingEvent event) {
-        if (event.getServer().isDedicatedServer()) {
-            try {
-                neoForgePlatform = new NeoForgePlatform(event.getServer());
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
+        try {
+            neoForgePlatform = new NeoForgePlatform();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -39,8 +33,7 @@ public class AlwaysAuthMod {
     @SubscribeEvent
     public void onPlayerJoin(PlayerEvent.PlayerLoggedInEvent event) {
         if (event.getEntity().getPermissionLevel() >= 4) {
-            String message = neoForgePlatform.getUpdateMessage();
-            if (message != null) ((ServerPlayer) event.getEntity()).sendSystemMessage(Component.literal(message));
+            neoForgePlatform.getUpdateMessage().ifPresent(msg -> ((ServerPlayer) event.getEntity()).sendSystemMessage(Component.literal(msg)));
         }
     }
 
@@ -98,5 +91,4 @@ public class AlwaysAuthMod {
                 )
         );
     }
-
 }

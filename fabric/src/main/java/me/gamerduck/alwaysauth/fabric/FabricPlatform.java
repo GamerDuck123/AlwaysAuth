@@ -7,15 +7,15 @@ import net.minecraft.server.MinecraftServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.file.Path;
+
 public class FabricPlatform extends Platform<CommandSourceStack> {
 
     public static final Logger LOGGER = LoggerFactory.getLogger("alwaysauth");
     private MinecraftServer minecraftServer;
 
-    public FabricPlatform(MinecraftServer minecraftServer) {
-        super(minecraftServer.getServerDirectory().resolve("config/AlwaysAuth"));
-        String message = getUpdateMessage();
-        if (message != null) sendLogMessage(message);
+    public FabricPlatform() {
+        super(Path.of("config/AlwaysAuth"));
     }
 
     @Override

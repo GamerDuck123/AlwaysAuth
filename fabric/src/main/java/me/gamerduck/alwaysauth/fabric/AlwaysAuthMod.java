@@ -12,6 +12,11 @@ public class AlwaysAuthMod implements ModInitializer {
 
     @Override
     public void onInitialize() {
+        try {
+            fabricPlatform = new FabricPlatform();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
             dispatcher.register(Commands.literal("alwaysauth")
                     .requires(source -> source.hasPermission(4))
@@ -64,15 +69,7 @@ public class AlwaysAuthMod implements ModInitializer {
                             })
                     )
             );
-        });
-        ServerLifecycleEvents.SERVER_STARTING.register(server -> {
-            if (server.isDedicatedServer()) {
-                try {
-                    fabricPlatform = new FabricPlatform(server);
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
-            }
+
         });
 
         ServerLifecycleEvents.SERVER_STOPPING.register(server -> {
@@ -82,8 +79,7 @@ public class AlwaysAuthMod implements ModInitializer {
         });
         ServerPlayerEvents.JOIN.register(player -> {
             if (player.getPermissionLevel() >= 4) {
-                String message = fabricPlatform.getUpdateMessage();
-                if (message != null) player.sendSystemMessage(Component.literal(message));
+                fabricPlatform.getUpdateMessage().ifPresent(msg -> player.sendSystemMessage(Component.literal(msg)));
             }
         });
     }

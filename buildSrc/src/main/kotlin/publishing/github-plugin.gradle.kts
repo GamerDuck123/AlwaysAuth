@@ -8,7 +8,7 @@ githubRelease {
     repo.set(rootProject.property("githubID") as String)
 
     tagName.set("v${rootProject.version as String}")
-    releaseName.set("AlwaysAuth v${rootProject.version as String}")
+    releaseName.set("${rootProject.name} v${rootProject.version as String}")
     targetCommitish.set("master")
 
     body.set(rootProject.file("CHANGELOG.md").readText())

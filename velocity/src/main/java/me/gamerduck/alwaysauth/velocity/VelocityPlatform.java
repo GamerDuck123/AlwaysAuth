@@ -17,8 +17,7 @@ public class VelocityPlatform extends Platform<CommandSource> {
     public VelocityPlatform(ProxyServer server, Logger logger, Path dataDirectory) {
         super(dataDirectory);
         this.server = server;
-        String message = getUpdateMessage();
-        if (message != null) sendLogMessage(message);
+        getUpdateMessage().ifPresent(this::sendLogMessage);
 
         VelocitySessionServerChanger.setCustomSessionServer(this, config().getSessionServerUrl());
         VelocityConfigurationChanger.forcePreventClientProxyConnections(this, server);

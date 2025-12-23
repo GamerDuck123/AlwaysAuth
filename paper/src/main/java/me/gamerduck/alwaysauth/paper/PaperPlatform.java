@@ -30,9 +30,6 @@ public class PaperPlatform extends Platform<CommandSourceStack> implements Liste
         super(bootstrap.getDataFolder().toPath());
         this.plugin = bootstrap;
 
-        String message = getUpdateMessage();
-        if (message != null) sendLogMessage(message);
-
         AuthenticationURLReplacer.replaceSessionService(this, config().getSessionServerUrl());
         ServerPropertiesReplacer.forcePreventProxyConnections(this);
 
@@ -91,8 +88,7 @@ public class PaperPlatform extends Platform<CommandSourceStack> implements Liste
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {
         if (event.getPlayer().hasPermission("alwaysauth.admin")) {
-            String message = getUpdateMessage();
-            if (message != null) event.getPlayer().sendMessage(message);
+            getUpdateMessage().ifPresent(updateMessage -> event.getPlayer().sendMessage(updateMessage));
         }
     }
 

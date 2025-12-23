@@ -13,6 +13,7 @@ import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Fetches version numbers from Modrinth API.
@@ -20,14 +21,18 @@ import java.util.List;
 public class ModrinthUpdateChecker {
     private static final String API_URL = "https://api.modrinth.com/v2/project/@modrinthToken@/version";
     private static final String VERSION = "@version@";
+    private static final String LOADER = "@loader@";
     private static final Gson GSON = new Gson();
     private static final HttpClient HTTP_CLIENT = HttpClient.newBuilder()
             .connectTimeout(Duration.ofSeconds(5))
             .build();
 
-    public static boolean hasNewer() {
-        String newestVersion = fetchVersionNumbers().get(0).split("-")[0];
-        return FlexVerComparator.compare(newestVersion, VERSION) > 0;
+    public static Optional<String> getNewer() {
+        Optional<String> newestVersion = fetchVersionNumbers().stream().filter(s -> s.endsWith("-" + LOADER))
+                .map(s -> s.split("-")[0]).findFirst();
+        if (newestVersion.isPresent() && FlexVerComparator.compare(newestVersion.get(), VERSION) > 0)
+            return Optional.of(newestVersion.get());
+        return Optional.empty();
     }
 
     /**
@@ -35,7 +40,7 @@ public class ModrinthUpdateChecker {
      *
      * @return List of version number strings, or null if fetch fails
      */
-    public static List<String> fetchVersionNumbers() {
+    private static List<String> fetchVersionNumbers() {
         try {
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(API_URL))

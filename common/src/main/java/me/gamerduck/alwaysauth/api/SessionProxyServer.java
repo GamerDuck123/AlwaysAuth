@@ -224,8 +224,16 @@ public class SessionProxyServer {
 
             if (debug) platform.sendLogMessage("Authentication request for user: " + username + " (serverId: " + serverId + ")");
 
+            // Reconstruct clean query string for upstream (without auth token)
+            StringBuilder cleanQuery = new StringBuilder();
+            cleanQuery.append("username=").append(URLEncoder.encode(username, "UTF-8"));
+            cleanQuery.append("&serverId=").append(URLEncoder.encode(serverId, "UTF-8"));
+            if (ip != null) {
+                cleanQuery.append("&ip=").append(URLEncoder.encode(ip, "UTF-8"));
+            }
+
             try {
-                String upstreamResponse = forwardToUpstream("/session/minecraft/hasJoined", query);
+                String upstreamResponse = forwardToUpstream("/session/minecraft/hasJoined", cleanQuery.toString());
 
                 if (upstreamResponse != null && !upstreamResponse.isEmpty()) {
                     JsonObject profile = gson.fromJson(upstreamResponse, JsonObject.class);
@@ -418,12 +426,14 @@ public class SessionProxyServer {
         QueryParams params = new QueryParams();
         if (query == null) return params;
 
-        for (String param : query.split("&")) {
-            String[] pair = param.split("=", 2);
-            if (pair.length == 2) {
-                try {
-                    params.put(pair[0], URLDecoder.decode(pair[1], "UTF-8"));
-                } catch (UnsupportedEncodingException e) {
+        for (String header : query.split("\\?")) {
+            for (String param : header.split("&")) {
+                String[] pair = param.split("=", 2);
+                if (pair.length == 2) {
+                    try {
+                        params.put(pair[0], URLDecoder.decode(pair[1], "UTF-8"));
+                    } catch (UnsupportedEncodingException e) {
+                    }
                 }
             }
         }

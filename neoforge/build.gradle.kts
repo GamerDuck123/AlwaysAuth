@@ -40,6 +40,9 @@ tasks.register<Copy>("copyCommonSources") {
         filter { line: String ->
             line.replace("@modrinthToken@", project.property("modrinthID") as String)
         }
+        filter { line: String ->
+            line.replace("@loader@", project.name)
+        }
     }
     from("$rootDir/common/src/main/resources") {
         exclude("${project.property("modid")}.accesswidener")
@@ -85,7 +88,7 @@ tasks {
             "modName" to rootProject.name,
             "modLicense" to project.property("license"),
             "issueTracker" to project.property("issues"),
-            "modVersion" to project.property("version").toString().replace("v", ""),
+            "modVersion" to rootProject.property("version").toString(),
             "modAuthor" to project.property("author"),
             "modDescription" to project.property("description")
         )

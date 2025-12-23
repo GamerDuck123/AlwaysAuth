@@ -6,6 +6,7 @@ import me.gamerduck.alwaysauth.api.SessionProxyServer;
 import me.gamerduck.alwaysauth.api.updates.ModrinthUpdateChecker;
 
 import java.nio.file.Path;
+import java.util.Optional;
 import java.util.logging.Logger;
 
 /**
@@ -80,6 +81,7 @@ public abstract class Platform<CS> {
                 sendLogMessage("AlwaysAuth enabled! Using external domain " + config.getSessionServerUrl());
                 proxyServer = null;
             }
+            getUpdateMessage().ifPresent(this::sendLogMessage);
         } catch (Exception e) {
             sendSevereLogMessage("Failed to enable AlwaysAuth" + e.getMessage());
             throw new RuntimeException(e);
@@ -124,13 +126,13 @@ public abstract class Platform<CS> {
      *
      * @return the update message
      */
-    public String getUpdateMessage() {
-        if (config.getUpdates() && ModrinthUpdateChecker.hasNewer()) {
-            return "\u00A7cHey there is a new update for AlwaysAuth! " +
-                    "\u00A7cPlease update soon for the latest and best features! https://modrinth.com/plugin/alwaysauth/versions";
-        } else {
-            return null;
+    public Optional<String> getUpdateMessage() {
+        Optional<String> newer = ModrinthUpdateChecker.getNewer();
+        if (config.getUpdates() && newer.isPresent()) {
+            return Optional.of("\u00A7cHey there is a new update for AlwaysAuth (" + newer.get() + ")! " +
+                    "\u00A7cPlease update soon for the latest and best features! https://modrinth.com/plugin/alwaysauth/versions");
         }
+        return Optional.empty();
     }
 
     /**

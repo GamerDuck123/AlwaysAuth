@@ -36,7 +36,7 @@ public class VelocitySessionServerChanger {
             String formattedUrl = customSessionServer.concat("/session/minecraft/hasJoined").concat("?username=%s&serverId=%s");
             unsafe.putObject(base, offset, formattedUrl);
 
-            if (platform.isDebug()) platform.sendLogMessage("Successfully changed Mojang session server URL to " + customSessionServer);
+            if (platform.isDebug()) platform.sendLogMessage("Successfully changed Mojang session server URL to " + unsafe.getObject(base, offset));
 
         } catch (Exception e) {
             platform.sendSevereLogMessage("Failed to modify Mojang session server URL:");

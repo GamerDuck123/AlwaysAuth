@@ -1,14 +1,7 @@
-# v0.4.0 - Update Checker
+# v0.4.4 - Yet Another Fix for Velocity
 
-## Update Checker
-I have added a simple update checker so that you can always be notified when there is
-a new release! It will notify the staff with the permission alwaysauth.admin and notify
-console when the server is started.
+So sorry that this update took so long, I was celebrating Thanksgiving with family and was unable to work on the project!
 
-This feature can be disabled within the config by disabling `check-updates`
-
----
-
-## Other Things
-I aso removed some annoying debug messages that were left over from me testing the
-config system. As well as some other non-necessary messages
+This update fixes the issue of the plugin disabling itself on Velocity, 
+while copying events around I accidentally copied the disable method into the 
+player join method so whenever a player joined the plugin got disabled. So it has been fixed!

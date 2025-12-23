@@ -18,9 +18,6 @@ public class SpigotPlatform extends Platform<CommandSender> implements Listener 
     public SpigotPlatform(JavaPlugin bootstrap) {
         super(bootstrap.getDataFolder().toPath());
 
-        String message = getUpdateMessage();
-        if (message != null) sendLogMessage(message);
-
         AuthenticationURLReplacer.replaceSessionService(this, config().getSessionServerUrl());
         ServerPropertiesReplacer.forcePreventProxyConnections(this);
 
@@ -73,8 +70,7 @@ public class SpigotPlatform extends Platform<CommandSender> implements Listener 
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {
         if (event.getPlayer().hasPermission("alwaysauth.admin")) {
-            String message = getUpdateMessage();
-            if (message != null) event.getPlayer().sendMessage(message);
+            getUpdateMessage().ifPresent(updateMessage -> event.getPlayer().sendMessage(updateMessage));
         }
     }
 }
