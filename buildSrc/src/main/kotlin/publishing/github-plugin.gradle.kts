@@ -17,7 +17,7 @@ githubRelease {
     prerelease.set((rootProject.property("versionType") as String) != "release")
 
     releaseAssets.setFrom(when (project.name) {
-        "standalone" -> tasks.named<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("shadowJar").flatMap { it.archiveFile }
+        "standalone" -> tasks.named<Jar>("jar").flatMap { it.archiveFile }
         "fabric" -> tasks.named<net.fabricmc.loom.task.RemapJarTask>("remapJar").flatMap { it.archiveFile }
         "neoforge" -> tasks.named<Jar>("jar").flatMap { it.archiveFile }
         "paper" -> tasks.named<Jar>("jar").flatMap { it.archiveFile }

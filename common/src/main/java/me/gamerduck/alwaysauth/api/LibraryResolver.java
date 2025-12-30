@@ -1,20 +1,19 @@
-package me.gamerduck.alwaysauth.velocity.api;
-import com.velocitypowered.api.plugin.Plugin;
-import com.velocitypowered.api.plugin.PluginManager;
+package me.gamerduck.alwaysauth.api;
 
-import java.io.*;
-import java.net.HttpURLConnection;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
-import java.net.URLClassLoader;
-import java.nio.file.*;
-import java.security.MessageDigest;
-import java.util.*;
-import java.util.jar.JarFile;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
+import java.util.List;
 
-public class LibraryResolver {
+public abstract class LibraryResolver<T> {
 
-    private final List<String> repositories = new ArrayList<>();
-    private final List<String> dependencies = new ArrayList<>();
+    protected final List<String> repositories = new ArrayList<>();
+    protected final List<String> dependencies = new ArrayList<>();
 
     public void addRepository(String url) {
         repositories.add(url.endsWith("/") ? url : url + "/");
@@ -28,17 +27,9 @@ public class LibraryResolver {
         addDependency(group + ":" + artifact + ":" + version);
     }
 
-    public void resolveDependencies(Path libsFolder, PluginManager manager, Object plugin) throws Exception {
-        if (Files.notExists(libsFolder)) Files.createDirectories(libsFolder);
+    public abstract void resolveDependencies(Path libsFolder, T libraryManager, Object plugin) throws Exception;
 
-        for (String dep : dependencies) {
-            File jar = resolveDependency(dep, libsFolder);
-            if (jar != null) manager.addToClasspath(plugin, jar.toPath());
-        }
-
-    }
-
-    private File resolveDependency(String coords, Path libsFolder) {
+    protected File resolveDependency(String coords, Path libsFolder) {
         try {
             String[] parts = coords.split(":");
             if (parts.length != 3) throw new IllegalArgumentException("Invalid Maven coordinates: " + coords);
@@ -61,7 +52,7 @@ public class LibraryResolver {
         }
     }
 
-    private boolean downloadFile(String url, File output) {
+    protected boolean downloadFile(String url, File output) {
         try (InputStream in = new URL(url).openStream()) {
             Files.copy(in, output.toPath(), StandardCopyOption.REPLACE_EXISTING);
             return true;

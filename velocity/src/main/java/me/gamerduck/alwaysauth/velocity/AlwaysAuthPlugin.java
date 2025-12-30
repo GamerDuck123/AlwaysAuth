@@ -11,7 +11,7 @@ import com.velocitypowered.api.event.proxy.ProxyShutdownEvent;
 import com.velocitypowered.api.plugin.Plugin;
 import com.velocitypowered.api.plugin.annotation.DataDirectory;
 import com.velocitypowered.api.proxy.ProxyServer;
-import me.gamerduck.alwaysauth.velocity.api.LibraryResolver;
+import me.gamerduck.alwaysauth.velocity.api.VelocityLibraryResolver;
 import net.kyori.adventure.text.Component;
 
 import java.io.IOException;
@@ -102,7 +102,7 @@ public class AlwaysAuthPlugin {
                 throw new RuntimeException(e);
             }
         }
-        LibraryResolver resolver = new LibraryResolver();
+        VelocityLibraryResolver resolver = new VelocityLibraryResolver();
         resolver.addDependency("com.h2database:h2:2.3.232");
         resolver.addDependency("com.mysql:mysql-connector-j:8.0.33");
         resolver.addDependency("org.mariadb.jdbc:mariadb-java-client:3.3.2");

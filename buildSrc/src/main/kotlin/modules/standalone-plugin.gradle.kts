@@ -1,6 +1,5 @@
 plugins {
     id("root-plugin")
-    id("com.gradleup.shadow")
     id("github-plugin")
 }
 

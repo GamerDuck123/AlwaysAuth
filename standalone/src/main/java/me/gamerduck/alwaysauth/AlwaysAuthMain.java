@@ -1,56 +1,44 @@
 package me.gamerduck.alwaysauth;
 
+import me.gamerduck.alwaysauth.api.StandaloneLibraryResolver;
+
+import java.io.IOException;
+import java.lang.reflect.Method;
+import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Scanner;
 
 public class AlwaysAuthMain {
-    private static StandalonePlatform standAlonePlatform;
-    public static void main(String[] arg) {
+
+    public static void main(String[] args) throws Exception {
         long startMS = System.currentTimeMillis();
         String dataDirectory = System.getProperty("directory", "./data");
+        Path dataPath = Path.of(dataDirectory);
 
-        try {
-            standAlonePlatform = new StandalonePlatform(Path.of(dataDirectory));
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-
-        standAlonePlatform.sendLogMessage(String.format("Done (%sms)! For help, type \"help\"", System.currentTimeMillis() - startMS));
-
-        Scanner scanner = new Scanner(System.in);
-
-        while (true) {
-            System.out.print("> ");
-            String input = scanner.nextLine().trim();
-
-            if (input.equalsIgnoreCase("exit")
-                    || input.equalsIgnoreCase("quit")
-                    || input.equalsIgnoreCase("stop")) {
-                standAlonePlatform.sendLogMessage("Shutting down...");
-                break;
-            }
-
-            String[] args = input.split(" ");
-            switch (args[0].toLowerCase()) {
-                case "status" -> standAlonePlatform.cmdStatus(System.out);
-                case "stats" -> standAlonePlatform.cmdStats(System.out);
-                case "toggle" -> standAlonePlatform.cmdToggle(System.out);
-                case "security" -> {
-                    if (args.length < 2) {
-                        standAlonePlatform.sendLogMessage("Usage: security <basic|medium>");
-                        return;
-                    }
-                    String level = args[1].toLowerCase();
-                    standAlonePlatform.cmdSecurity(System.out, level);
-                }
-                case "cleanup" -> standAlonePlatform.cmdCleanup(System.out);
-                case "reload" -> standAlonePlatform.cmdReload(System.out);
-                default -> standAlonePlatform.cmdHelp(System.out);
+        String librariesDirectory = System.getProperty("libraries", "./libraries");
+        Path libraries = Path.of(librariesDirectory);
+        if (Files.notExists(libraries)) {
+            try {
+                Files.createDirectories(libraries);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
             }
         }
 
-        scanner.close();
+        StandaloneLibraryResolver resolver = new StandaloneLibraryResolver();
+        resolver.addDependency("com.h2database:h2:2.3.232");
+        resolver.addDependency("com.mysql:mysql-connector-j:8.0.33");
+        resolver.addDependency("org.mariadb.jdbc:mariadb-java-client:3.3.2");
+        resolver.addDependency("com.google.code.gson:gson:2.10.1");
+        resolver.addRepository("https://repo.papermc.io/repository/maven-public/");
+
+        resolver.resolveDependencies(libraries, AlwaysAuthMain.class, null);
+
+        // Load and run the actual main class from the new classloader
+        ClassLoader loader = resolver.getClassLoader();
+        Class<?> mainClass = loader.loadClass("me.gamerduck.alwaysauth.StandalonePlatform");
+        Method runMethod = mainClass.getDeclaredMethod("startup", String[].class, Path.class, long.class);
+        runMethod.invoke(null, args, dataPath, startMS);
+
         System.exit(0);
-
     }
 }

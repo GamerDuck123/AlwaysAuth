@@ -72,7 +72,7 @@ tasks {
         into(layout.buildDirectory.dir("src/main/resources"))
     }
     build {
-        dependsOn("shadowJar")
+//        dependsOn("shadowJar")
     }
 //    shadowJar {
 //        dependencies {

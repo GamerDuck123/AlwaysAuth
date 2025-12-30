@@ -3,12 +3,12 @@ plugins {
 }
 
 dependencies {
-    implementation(libs.authlib)
+    compileOnly(libs.authlib)
 
-    implementation(libs.h2)
-    implementation(libs.gson)
-    implementation(libs.mysql)
-    implementation(libs.mariadb)
+    compileOnly(libs.h2)
+    compileOnly(libs.gson)
+    compileOnly(libs.mysql)
+    compileOnly(libs.mariadb)
 }
 
 tasks.register<Copy>("copyCommonSources") {
@@ -62,11 +62,10 @@ tasks {
         }
     }
     build {
-        dependsOn("shadowJar")
     }
 }
 
-tasks.named<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("shadowJar") {
-    archiveClassifier.set("")
-    mergeServiceFiles()
-}
+//tasks.named<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("shadowJar") {
+//    archiveClassifier.set("")
+//    mergeServiceFiles()
+//}
