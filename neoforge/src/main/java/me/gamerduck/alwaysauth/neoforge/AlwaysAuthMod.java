@@ -3,26 +3,34 @@ package me.gamerduck.alwaysauth.neoforge;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.permissions.Permission;
+import net.minecraft.server.permissions.PermissionLevel;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
-import net.neoforged.neoforge.event.server.ServerStartingEvent;
+import net.neoforged.neoforge.event.server.ServerAboutToStartEvent;
 import net.neoforged.neoforge.event.server.ServerStoppingEvent;
 
 @Mod(AlwaysAuthMod.MODID)
 public class AlwaysAuthMod {
     public static final String MODID = "alwaysauth";
-    private static NeoForgePlatform neoForgePlatform;
+    public static NeoForgePlatform neoForgePlatform;
 
     public AlwaysAuthMod() {
         NeoForge.EVENT_BUS.register(this);
         try {
-            neoForgePlatform = new NeoForgePlatform();
+            AlwaysAuthMod.neoForgePlatform = new NeoForgePlatform();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+
+    @SubscribeEvent
+    public void onServerAboutToStart(ServerAboutToStartEvent event) {
+        neoForgePlatform.replaceAuthUrls(event.getServer());
     }
 
     @SubscribeEvent
@@ -32,7 +40,7 @@ public class AlwaysAuthMod {
 
     @SubscribeEvent
     public void onPlayerJoin(PlayerEvent.PlayerLoggedInEvent event) {
-        if (event.getEntity().getPermissionLevel() >= 4) {
+        if (event.getEntity().permissions().hasPermission(new Permission.HasCommandLevel(PermissionLevel.ADMINS))) {
             neoForgePlatform.getUpdateMessage().ifPresent(msg -> ((ServerPlayer) event.getEntity()).sendSystemMessage(Component.literal(msg)));
         }
     }
@@ -40,7 +48,7 @@ public class AlwaysAuthMod {
     @SubscribeEvent
     public void onCommandRegistrationEvent(RegisterCommandsEvent e) {
         e.getDispatcher().register(Commands.literal("alwaysauth")
-                .requires(source -> source.hasPermission(4))
+                .requires(source -> source.permissions().hasPermission(new Permission.HasCommandLevel(PermissionLevel.ADMINS)))
                 .executes(context -> {
                     neoForgePlatform.cmdHelp(context.getSource());
                     return 1;

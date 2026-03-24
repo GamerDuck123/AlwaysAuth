@@ -3,12 +3,26 @@ plugins {
 }
 
 dependencies {
-    implementation(libs.h2)
-    implementation(libs.mysql)
-    implementation(libs.mariadb)
+    jarJar(libs.h2) {
+        version {
+            strictly("[${libs.versions.h2.get()}]")
+        }
+    }
+    jarJar(libs.mysql) {
+        version {
+            strictly("[${libs.versions.mysql.get()}]")
+        }
+    }
+    jarJar(libs.mariadb) {
+        version {
+                strictly("[${libs.versions.mariadb.get()}]")
+        }
+    }
 }
 
+
 neoForge {
+
     version = libs.versions.neo.get()
 
     parchment {

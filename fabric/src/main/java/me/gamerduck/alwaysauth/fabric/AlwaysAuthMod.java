@@ -6,6 +6,9 @@ import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.permissions.Permission;
+import net.minecraft.server.permissions.PermissionLevel;
+import net.minecraft.server.permissions.PermissionSet;
 
 public class AlwaysAuthMod implements ModInitializer {
     private static FabricPlatform fabricPlatform;
@@ -19,7 +22,7 @@ public class AlwaysAuthMod implements ModInitializer {
         }
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
             dispatcher.register(Commands.literal("alwaysauth")
-                    .requires(source -> source.hasPermission(4))
+                    .requires(source -> source.permissions().hasPermission(new Permission.HasCommandLevel(PermissionLevel.OWNERS)))
                     .executes(context -> {
                         fabricPlatform.cmdHelp(context.getSource());
                         return 1;
@@ -78,7 +81,7 @@ public class AlwaysAuthMod implements ModInitializer {
             }
         });
         ServerPlayerEvents.JOIN.register(player -> {
-            if (player.getPermissionLevel() >= 4) {
+            if (player.permissions().hasPermission(new Permission.HasCommandLevel(PermissionLevel.ADMINS))) {
                 fabricPlatform.getUpdateMessage().ifPresent(msg -> player.sendSystemMessage(Component.literal(msg)));
             }
         });

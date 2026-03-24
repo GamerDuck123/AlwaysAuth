@@ -23,6 +23,19 @@ tasks {
         dependsOn(subprojects.filter { it.name in listOf("standalone", "paper", "fabric", "neoforge", "spigot", "velocity") }.map { it.tasks.named("githubRelease") })
     }
 
+    register<Copy>("singlePublish") {
+        val platforms = (project.findProperty("platform") as String?)
+            ?.split(",")?.map { it.trim() }
+
+        fun List<String>.filterByPlatform() =
+            if (platforms != null) intersect(platforms.toSet()).toList() else this
+
+        dependsOn(subprojects.filter { it.name in listOf("paper", "fabric", "neoforge", "spigot", "velocity").filterByPlatform() }.map { it.tasks.named("modrinth") })
+        dependsOn(subprojects.filter { it.name in listOf("paper", "velocity").filterByPlatform() }.map { it.tasks.named("publishPluginPublicationToHangar") })
+        dependsOn(subprojects.filter { it.name in listOf("fabric", "neoforge").filterByPlatform() }.map { it.tasks.named("publishCurseForge") })
+        dependsOn(subprojects.filter { it.name in listOf("standalone", "paper", "fabric", "neoforge", "spigot", "velocity").filterByPlatform() }.map { it.tasks.named("githubRelease") })
+    }
+
     assemble {
         dependsOn(subprojects.filter { it.name !in listOf("common") }.map {
             it.tasks.named("clean")

@@ -2,18 +2,16 @@ package me.gamerduck.alwaysauth.reflection;
 
 
 import me.gamerduck.alwaysauth.Platform;
-import sun.misc.Unsafe;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.logging.Logger;
 
 /**
- * Forces the "prevent-proxy-connections" server property using reflection and Unsafe.
+ * Forces the "prevent-proxy-connections" server property using reflection and VarHandle.
  * <p>
- * This class uses Java's Unsafe API to modify a final field in Minecraft's server properties
- * at runtime. This is necessary because the field is final and cannot be changed through
- * normal reflection, but we need to ensure it's set to true for security.
+ * This class uses Java's {@link java.lang.invoke.VarHandle} API to modify a final field in
+ * Minecraft's server properties at runtime. This is necessary because the field is final and
+ * cannot be changed through normal reflection, but we need to ensure it's set to true for security.
  * </p>
  *
  * <h2>Why This Class Exists</h2>
@@ -32,7 +30,7 @@ import java.util.logging.Logger;
  *   → CraftServer.getServer()
  *     → DedicatedServer.settings (field)
  *       → DedicatedServerProperties.preventProxyConnections (final field)
- *         → Unsafe.putBoolean() to bypass final modifier
+ *         → VarHandle.set() via MethodHandles.privateLookupIn() to bypass final modifier
  * </pre>
  * </p>
  *
@@ -135,6 +133,7 @@ public class ServerPropertiesReplacer {
      * Each property in server.properties has a corresponding field here.
      */
     private static final String DEDICATED_SERVER_PROPERTIES_CLASS = "net.minecraft.server.dedicated.DedicatedServerProperties";
+    private static final String DEDICATED_SERVER_SETTINGS_CLASS = "net.minecraft.server.dedicated.DedicatedServerSettings";
 
     /**
      * Method name for getting server instance from Bukkit.
@@ -154,9 +153,11 @@ public class ServerPropertiesReplacer {
      */
     private static final String SETTINGS_FIELD = "settings";
 
+    private static final String GET_PROPERTIES_METHOD_SETTINGS = "getProperties";
+
     /**
      * Field name for the prevent-proxy-connections setting in DedicatedServerProperties.
-     * This field is final, so we need Unsafe to modify it.
+     * This field is final, so we need VarHandle via MethodHandles.privateLookupIn() to modify it.
      */
     private static final String PREVENT_PROXY_CONNECTIONS_FIELD = "preventProxyConnections";
 
@@ -165,26 +166,6 @@ public class ServerPropertiesReplacer {
      * Always set to true to maintain security while using AlwaysAuth.
      */
     private static final boolean PREVENT_PROXY_CONNECTIONS_VALUE = true;
-
-    /**
-     * Obtains the singleton Unsafe instance using reflection.
-     * <p>
-     * The Unsafe class has a private static field "theUnsafe" that holds the singleton instance.
-     * This method uses reflection to access this private field and return the Unsafe instance.
-     * </p>
-     * <p>
-     * <b>Warning:</b> This accesses an internal JDK API that is not guaranteed to exist
-     * in all Java implementations or future Java versions.
-     * </p>
-     *
-     * @return the Unsafe instance
-     * @throws Exception if the Unsafe instance cannot be obtained (field not found or access denied)
-     */
-    private static Unsafe getUnsafe() throws Exception {
-        Field unsafeField = Unsafe.class.getDeclaredField("theUnsafe");
-        unsafeField.setAccessible(true);
-        return (Unsafe) unsafeField.get(null);
-    }
 
     /**
      * Forces the prevent-proxy-connections setting to true using Unsafe.
@@ -213,6 +194,7 @@ public class ServerPropertiesReplacer {
             Class<?> bukkitClass = Class.forName(BUKKIT_CLASS);
             Class<?> craftServerClass = Class.forName(CRAFT_SERVER_CLASS);
             Class<?> dedicatedServerClass = Class.forName(DEDICATED_SERVER_CLASS);
+            Class<?> dedicatedServerSettingsClass = Class.forName(DEDICATED_SERVER_SETTINGS_CLASS);
             Class<?> dedicatedServerPropertiesClass = Class.forName(DEDICATED_SERVER_PROPERTIES_CLASS);
 
             // Step 2: Get the Bukkit server instance
@@ -229,19 +211,15 @@ public class ServerPropertiesReplacer {
             // This field holds the DedicatedServerProperties instance with all server.properties values
             Field settingsField = dedicatedServerClass.getDeclaredField(SETTINGS_FIELD);
             settingsField.setAccessible(true);
-            Object properties = settingsField.get(minecraftServer);
+            Object settings = settingsField.get(minecraftServer);
 
-            // Step 5: Get the preventProxyConnections field metadata
-            // We need the Field object to calculate its memory offset for Unsafe
-            Field preventProxyField = dedicatedServerPropertiesClass.getDeclaredField(PREVENT_PROXY_CONNECTIONS_FIELD);
+            Method getPropertiesMethod = dedicatedServerSettingsClass.getMethod(GET_PROPERTIES_METHOD_SETTINGS);
+            Object properties = getPropertiesMethod.invoke(settings);
+
+            // Step 5: Set the public, non-final field directly via reflection
+            Field preventProxyField = dedicatedServerPropertiesClass.getField(PREVENT_PROXY_CONNECTIONS_FIELD);
             preventProxyField.setAccessible(true);
-
-            // Step 6: Use Unsafe to modify the final field
-            // Calculate the field's memory offset, then directly write the new boolean value
-            // This bypasses Java's final field protection
-            Unsafe unsafe = getUnsafe();
-            long fieldOffset = unsafe.objectFieldOffset(preventProxyField);
-            unsafe.putBoolean(properties, fieldOffset, PREVENT_PROXY_CONNECTIONS_VALUE);
+            preventProxyField.set(properties, PREVENT_PROXY_CONNECTIONS_VALUE);
 
             // Step 7: Log success if debug mode is enabled
             if (platform.isDebug()) {
@@ -258,7 +236,7 @@ public class ServerPropertiesReplacer {
             platform.sendSevereLogMessage("Failed to find required method - check if method names changed: " + e.getMessage());
             e.printStackTrace();
         } catch (Exception e) {
-            platform.sendSevereLogMessage("Unexpected error modifying server properties (Unsafe may be unavailable): " + e.getMessage());
+            platform.sendSevereLogMessage("Unexpected error modifying server properties: " + e.getMessage());
             e.printStackTrace();
         }
     }

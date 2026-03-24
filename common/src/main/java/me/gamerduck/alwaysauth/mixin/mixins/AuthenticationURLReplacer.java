@@ -68,7 +68,7 @@ public abstract class AuthenticationURLReplacer extends HttpAuthenticationServic
      * @param enviro the original Environment parameter containing Mojang's URLs
      * @return a modified Environment with AlwaysAuth's session server URL
      */
-    @ModifyArg(method = "createMinecraftSessionService", remap = false, at = @At(value = "INVOKE", target = "Lcom/mojang/authlib/yggdrasil/YggdrasilMinecraftSessionService;<init>(Lcom/mojang/authlib/yggdrasil/ServicesKeySet;Ljava/net/Proxy;Lcom/mojang/authlib/Environment;)V", remap = false), index = 2)
+    @ModifyArg(method = "createMinecraftSessionService", remap = false, at = @At(value = "INVOKE", target = "Lcom/mojang/authlib/yggdrasil/YggdrasilMinecraftSessionService;<init>(Lcom/mojang/authlib/yggdrasil/ServicesKeySet;Ljava/net/Proxy;Lcom/mojang/authlib/Environment;)V"), index = 2)
     private Environment injected(Environment enviro) {
         return new Environment(Platform.mixinOnly$instance.config().getSessionServerUrl(), enviro.servicesHost(), enviro.profilesHost(), enviro.name());
     }

@@ -27,7 +27,7 @@ hangarPublish {
                     register(Platforms.VELOCITY) {
                         jar.set(tasks.named<Jar>("jar").flatMap { it.archiveFile })
 
-                        platformVersions.set(listOf<String>("3.4"))
+                        platformVersions.set(listOf<String>("3.5"))
                     }
 
                 }

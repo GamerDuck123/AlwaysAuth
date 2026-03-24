@@ -1,7 +1,5 @@
-# v0.4.4 - Yet Another Fix for Velocity
+# v0.4.5 - NeoForge Update
 
-So sorry that this update took so long, I was celebrating Thanksgiving with family and was unable to work on the project!
+Hello! This is a patch for the NeoForge version of v0.4.5, it was including the SL4J logger which was causing issues with the server, this update should also be about ~11MB and not the 47KB that it was previously.
 
-This update fixes the issue of the plugin disabling itself on Velocity, 
-while copying events around I accidentally copied the disable method into the 
-player join method so whenever a player joined the plugin got disabled. So it has been fixed!
+*Note* I only tested booting as the Proxy Server should be agnostic from server type to server type, if there are any more issues, please let me know!

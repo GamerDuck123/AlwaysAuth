@@ -2,16 +2,16 @@ metadata.format.version = "1.1"
 
 [versions]
 
-minecraft = "1.21.10"
-loader = "0.17.3"
-api = "0.135.0" #Dont include the minecraft version
+minecraft = "1.21.11"
+loader = "0.18.4"
+api = "0.141.3" #Dont include the minecraft version
 brigadier = "1.2.9"
-parchment_mappings="2025.10.12"
-neo="21.9.16-beta"
-neoform="20251010.172816" #Dont include the minecraft version
+parchment_mappings="2025.12.20"
+neo="21.11.38-beta"
+neoform="20251209.172050" #Dont include the minecraft version
 mixin="0.8.5"
 extras="0.5.0"
-velocity="3.4.0-SNAPSHOT"
+velocity="3.5.0-SNAPSHOT"
 
 authlib="7.0.61"
 h2="2.3.232"
@@ -20,9 +20,9 @@ mysql="8.0.33"
 mariadb="3.3.2"
 
 shadow-gradle-plugin="9.1.0"
-paperweight-userdev="2.0.0-beta.18"
-moddev-gradle="2.0.115"
-fabric-loom="1.11-SNAPSHOT"
+paperweight-userdev="2.0.0-beta.19"
+moddev-gradle="2.0.140"
+fabric-loom="1.15-SNAPSHOT"
 minotaur="2.8.10"
 curseforge="1.1.26"
 hangar="0.1.3"

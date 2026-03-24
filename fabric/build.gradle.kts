@@ -5,10 +5,8 @@ plugins {
 dependencies {
     minecraft(libs.minecraft)
 
-    mappings(loom.layered {
-        officialMojangMappings()
-        parchment("org.parchmentmc.data:parchment-${libs.versions.minecraft.get()}:${libs.versions.parchment.mappings.get()}@zip")
-    })
+    mappings(loom.officialMojangMappings())
+
     modImplementation(libs.fabric.loader)
     modImplementation("${libs.fabric.api.get()}+${libs.versions.minecraft.get()}")
 
@@ -64,10 +62,6 @@ sourceSets {
     }
 }
 
-tasks.named<JavaCompile>("compileJava") {
-    dependsOn("copyCommonSources")
-}
-
 loom {
     accessWidenerPath.set(file("../common/src/main/resources/${project.property("modid")}.accesswidener"))
 
@@ -80,6 +74,15 @@ loom {
 }
 
 tasks {
+    compileJava {
+        dependsOn("copyCommonSources")
+    }
+    build {
+        dependsOn(remapJar)
+    }
+    remapJar {
+        destinationDirectory.set(file("${rootProject.layout.projectDirectory}/build/all"))
+    }
     processResources {
         dependsOn("copyCommonSources")
         val props = mapOf(

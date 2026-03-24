@@ -105,8 +105,8 @@ public class AlwaysAuthPlugin {
         VelocityLibraryResolver resolver = new VelocityLibraryResolver();
         resolver.addDependency("com.h2database:h2:2.3.232");
         resolver.addDependency("com.mysql:mysql-connector-j:8.0.33");
-        resolver.addDependency("org.mariadb.jdbc:mariadb-java-client:3.3.2");
-        resolver.addRepository("https://repo.papermc.io/repository/maven-public/");
+            resolver.addDependency("org.mariadb.jdbc:mariadb-java-client:3.3.2");
+            resolver.addRepository("https://repo.papermc.io/repository/maven-public/");
         try {
             resolver.resolveDependencies(libraries, server.getPluginManager(), this);
         } catch (Exception e) {

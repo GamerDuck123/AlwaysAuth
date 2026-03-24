@@ -15,7 +15,7 @@ repositories {
 }
 
 java {
-    toolchain.languageVersion.set(JavaLanguageVersion.of("21"))
+    toolchain.languageVersion.set(JavaLanguageVersion.of("25"))
 }
 
 tasks {
@@ -24,6 +24,6 @@ tasks {
     }
     compileJava {
         options.encoding = Charsets.UTF_8.name()
-        options.release.set(21)
+        options.release.set(25)
     }
 }

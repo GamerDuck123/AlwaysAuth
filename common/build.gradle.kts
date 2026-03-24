@@ -6,11 +6,11 @@ dependencies {
     compileOnly(libs.mixin)
     annotationProcessor("${libs.mixin.get()}:processor")
 
-    implementation(libs.extras)
+    compileOnly(libs.extras)
     annotationProcessor(libs.extras)
 
     implementation(libs.gson)
-    implementation(libs.authlib)
+    compileOnly(libs.authlib)
 }
 
 neoForge {
@@ -18,5 +18,5 @@ neoForge {
 }
 
 java {
-    toolchain.languageVersion.set(JavaLanguageVersion.of(21))
+    toolchain.languageVersion.set(JavaLanguageVersion.of(25))
 }

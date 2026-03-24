@@ -1,28 +1,62 @@
 package me.gamerduck.alwaysauth.neoforge;
 
+import com.mojang.authlib.HttpAuthenticationService;
 import com.mojang.logging.LogUtils;
 import me.gamerduck.alwaysauth.Platform;
 import net.minecraft.commands.CommandSourceStack;
-import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.level.ServerPlayer;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.neoforge.event.RegisterCommandsEvent;
-import net.neoforged.neoforge.event.entity.player.PlayerEvent;
-import net.neoforged.neoforge.event.server.ServerStartingEvent;
-import net.neoforged.neoforge.event.server.ServerStoppingEvent;
 import org.slf4j.Logger;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.net.URL;
 import java.nio.file.Path;
 
 public class NeoForgePlatform extends Platform<CommandSourceStack> {
 
     public static final Logger LOGGER = LogUtils.getLogger();
-    private MinecraftServer minecraftServer;
 
     public NeoForgePlatform() {
         super(Path.of("config/AlwaysAuth"));
+    }
+
+    public void replaceAuthUrls(MinecraftServer server) {
+        try {
+            Field servicesField = MinecraftServer.class.getDeclaredField("services");
+            servicesField.setAccessible(true);
+            Object services = servicesField.get(server);
+
+            Object sessionService = services.getClass().getMethod("sessionService").invoke(services);
+
+            Class<?> yggdrasilClass = Class.forName("com.mojang.authlib.yggdrasil.YggdrasilMinecraftSessionService");
+            if (!yggdrasilClass.isInstance(sessionService)) {
+                sendSevereLogMessage("Unexpected session service type, URL replacement failed: " + sessionService.getClass().getName());
+                return;
+            }
+
+            String newBaseUrl = config().getSessionServerUrl() + "/session/minecraft/";
+            Method constantUrl = HttpAuthenticationService.class.getMethod("constantURL", String.class);
+
+            Field baseUrlField = yggdrasilClass.getDeclaredField("baseUrl");
+            baseUrlField.setAccessible(true);
+            baseUrlField.set(sessionService, newBaseUrl);
+
+            Field joinUrlField = yggdrasilClass.getDeclaredField("joinUrl");
+            joinUrlField.setAccessible(true);
+            joinUrlField.set(sessionService, (URL) constantUrl.invoke(null, newBaseUrl + "join"));
+
+            Field checkUrlField = yggdrasilClass.getDeclaredField("checkUrl");
+            checkUrlField.setAccessible(true);
+            checkUrlField.set(sessionService, (URL) constantUrl.invoke(null, newBaseUrl + "hasJoined"));
+
+            sendLogMessage("Successfully replaced authentication URLs");
+            sendLogMessage("  Base URL: " + newBaseUrl);
+        } catch (NoSuchFieldException e) {
+            sendSevereLogMessage("Failed to find field for URL replacement: " + e.getMessage());
+        } catch (Exception e) {
+            sendSevereLogMessage("Failed to replace authentication URLs: " + e.getMessage());
+        }
     }
 
     @Override

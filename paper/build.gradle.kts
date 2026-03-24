@@ -6,6 +6,8 @@ dependencies {
     paperweight.paperDevBundle("${libs.versions.minecraft.get()}-R0.1-SNAPSHOT")
     compileOnly(libs.brigadier)
 }
+paperweight.reobfArtifactConfiguration = io.papermc.paperweight.userdev.ReobfArtifactConfiguration.MOJANG_PRODUCTION
+
 
 tasks.register<Copy>("copyCommonSources") {
     from("$rootDir/common/src/main/java") {
@@ -48,9 +50,6 @@ tasks.named<JavaCompile>("compileJava") {
 }
 
 tasks {
-    assemble {
-        dependsOn(reobfJar)
-    }
     processResources {
         dependsOn("copyCommonSources")
         val props = mapOf(
