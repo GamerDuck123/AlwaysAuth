@@ -60,6 +60,7 @@ tasks.register<Copy>("copyCommonSources") {
     }
     from("$rootDir/common/src/main/resources") {
         exclude("${project.property("modid")}.accesswidener")
+        exclude("${project.property("modid")}.classtweaker")
         exclude("templates/**")
         into("common/resources")
         filesMatching("**/${project.property("modid")}.mixins.json") {

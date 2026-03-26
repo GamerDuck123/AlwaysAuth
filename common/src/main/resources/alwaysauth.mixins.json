@@ -1,12 +1,14 @@
 {
   "required": true,
-  "package": "${group}.mixin.mixins",
+  "package": "${group}",
   "compatibilityLevel": "JAVA_17",
   "mixins": [
     "AuthenticationURLReplacer",
-    "ServerPropertiesReplacer"
+    "ServerPropertiesReplacer",
+    "ServerPlayerMixin",
+    "DedicatedServerMixin"
   ],
   "injectors": {
     "defaultRequire": 1
-	}
+  }
 }

@@ -1,6 +1,6 @@
 package me.gamerduck.alwaysauth.mixin.mixins;
 
-import net.minecraft.server.dedicated.DedicatedServerProperties;
+import net.minecraft.server.dedicated.ServerPropertiesHandler;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
@@ -26,7 +26,7 @@ import org.spongepowered.asm.mixin.injection.Redirect;
  *
  * @see me.gamerduck.alwaysauth.reflection.ServerPropertiesReplacer Reflection-based alternative for Paper/Spigot/Velocity
  */
-@Mixin(DedicatedServerProperties.class)
+@Mixin(ServerPropertiesHandler.class)
 public abstract class ServerPropertiesReplacer {
 
     /**
@@ -46,10 +46,10 @@ public abstract class ServerPropertiesReplacer {
      * </p>
      *
      * @param instance the DedicatedServerProperties instance being constructed
-     * @param value the original value from server.properties (ignored)
+     * @param value the original val    ue from server.properties (ignored)
      */
-    @Redirect(method = "<init>", at = @At(value = "FIELD", target = "Lnet/minecraft/server/dedicated/DedicatedServerProperties;preventProxyConnections:Z", opcode = 181))
-    private void injected(DedicatedServerProperties instance, boolean value) {
+    @Redirect(method = "<init>", at = @At(value = "FIELD", target = "Lnet/minecraft/server/dedicated/ServerPropertiesHandler;preventProxyConnections:Z", opcode = 181))
+    private void injected(ServerPropertiesHandler instance, boolean value) {
         instance.preventProxyConnections = true;
     }
 }

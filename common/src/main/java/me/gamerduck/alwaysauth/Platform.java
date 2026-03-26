@@ -5,6 +5,7 @@ import me.gamerduck.alwaysauth.api.SessionConfig;
 import me.gamerduck.alwaysauth.api.SessionProxyServer;
 import me.gamerduck.alwaysauth.api.updates.ModrinthUpdateChecker;
 
+import java.io.File;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.logging.Logger;

@@ -1,26 +1,28 @@
-package me.gamerduck.alwaysauth.fabric;
+package me.gamerduck.alwaysauth.fabricA120B26;
 
 import me.gamerduck.alwaysauth.Platform;
-import net.minecraft.commands.CommandSourceStack;
-import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.command.ServerCommandSource;
+import net.minecraft.text.Text;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.file.Path;
 
-public class FabricPlatform extends Platform<CommandSourceStack> {
+public class FabricPlatform extends Platform<ServerCommandSource> {
 
     public static final Logger LOGGER = LoggerFactory.getLogger("alwaysauth");
     private MinecraftServer minecraftServer;
+    public static FabricPlatform instance;
 
     public FabricPlatform() {
         super(Path.of("config/AlwaysAuth"));
+        instance = this;
     }
 
     @Override
-    public void sendMessage(CommandSourceStack commandSender, String msg) {
-        commandSender.sendSystemMessage(Component.literal(msg));
+    public void sendMessage(ServerCommandSource commandSender, String msg) {
+        commandSender.sendMessage(Text.literal(msg));
     }
 
     @Override

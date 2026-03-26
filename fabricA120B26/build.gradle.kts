@@ -3,12 +3,11 @@ plugins {
 }
 
 dependencies {
-    minecraft(libs.minecraft)
+    minecraft("com.mojang:minecraft:1.20")
 
-    mappings(loom.officialMojangMappings())
+    mappings("net.fabricmc:yarn:1.20+build.1:v2")
 
     modImplementation(libs.fabric.loader)
-    modImplementation("${libs.fabric.api.get()}+${libs.versions.minecraft.get()}")
 
     implementation(libs.authlib)
 
@@ -21,6 +20,7 @@ dependencies {
 tasks.register<Copy>("copyCommonSources") {
     from("$rootDir/common/src/main/java") {
         exclude("me/gamerduck/${project.property("modid")}/reflection/**")
+        exclude("me/gamerduck/${project.property("modid")}/mixin/mixins/**")
         into("common/java")
 
 
@@ -39,10 +39,11 @@ tasks.register<Copy>("copyCommonSources") {
     from("$rootDir/common/src/main/resources") {
         exclude("META-INF/**")
         exclude("templates/**")
+        exclude("${project.property("modid")}.classtweaker")
         into("common/resources")
         filesMatching("**/${project.property("modid")}.mixins.json") {
             expand(mapOf(
-                "group" to rootProject.group,
+                "group" to rootProject.group.toString() + ".mixin.mixins.p26",
             ))
         }
     }
@@ -63,7 +64,7 @@ sourceSets {
 }
 
 loom {
-    accessWidenerPath.set(file("../common/src/main/resources/${project.property("modid")}.accesswidener"))
+        accessWidenerPath.set(file("../common/src/main/resources/${project.property("modid")}.accesswidener"))
 
     mods {
         create(project.property("modid").toString()) {

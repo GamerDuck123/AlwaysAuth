@@ -4,7 +4,6 @@ import me.gamerduck.alwaysauth.Platform;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.URL;
-import java.util.logging.Logger;
 
 /**
  * Replaces Minecraft's authentication URLs using reflection for Paper/Spigot servers.
@@ -100,7 +99,7 @@ import java.util.logging.Logger;
  *   <li><b>Paper Mappings</b>: https://github.com/PaperMC/paperweight - Paper's deobfuscation mappings</li>
  * </ul>
  *
- * @see me.gamerduck.alwaysauth.mixin.mixins.AuthenticationURLReplacer The mixin version for Fabric/NeoForge
+ * @see AuthenticationURLReplacerA26 The mixin version for Fabric/NeoForge
  */
 public class AuthenticationURLReplacer {
 
