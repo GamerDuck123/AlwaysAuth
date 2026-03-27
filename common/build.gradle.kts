@@ -13,9 +13,9 @@ dependencies {
     compileOnly(libs.authlib)
 }
 
-neoForge {
-    neoFormVersion = "${libs.versions.minecraft.get()}-${libs.versions.neoform.get()}"
-}
+//neoForge {
+//    neoFormVersion = "${libs.versions.minecraft.get()}-${libs.versions.neoform.get()}"
+//}
 
 java {
     toolchain.languageVersion.set(JavaLanguageVersion.of(21))

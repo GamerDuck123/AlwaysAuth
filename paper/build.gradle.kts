@@ -24,12 +24,21 @@ tasks.register<Copy>("copyCommonSources") {
             line.replace("@loader@", project.name)
         }
     }
-    from("$rootDir/common/src/main/resources") {
-        exclude("META-INF/**")
-        exclude("templates/**")
-        exclude("${project.property("modid")}.accesswidener")
-        exclude("${project.property("modid")}.mixins.json")
+
+    from("$rootDir/common/src/main/resources/templates") {
+        include("paper-plugin.yml")
         into("common/resources")
+
+        filesMatching("paper-plugin.yml") {
+            expand(mapOf(
+                "name" to rootProject.name,
+                "group" to project.group,
+                "version" to rootProject.version,
+                "mainFile" to "${rootProject.name}Plugin",
+                "description" to rootProject.description,
+                "apiVersion" to libs.versions.minecraft.get()
+            ))
+        }
     }
     into("${layout.buildDirectory}/generated/sources")
 }
@@ -52,24 +61,5 @@ tasks.named<JavaCompile>("compileJava") {
 tasks {
     processResources {
         dependsOn("copyCommonSources")
-        val props = mapOf(
-            "name" to rootProject.name,
-            "group" to project.group,
-            "version" to rootProject.version,
-            "mainFile" to "${rootProject.name}Plugin",
-            "description" to rootProject.description,
-            "apiVersion" to libs.versions.minecraft.get()
-        )
-
-        from("src/main/templates") {
-            listOf(
-                "paper-plugin.yml",
-            ).forEach {
-                filesMatching(it) {
-                    expand(props)
-                }
-            }
-        }
-        into(layout.buildDirectory.dir("src/main/resources"))
     }
 }

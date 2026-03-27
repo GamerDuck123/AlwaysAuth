@@ -1,0 +1,14 @@
+{
+  "required": true,
+  "package": "${group}.mixins",
+  "compatibilityLevel": "${compatibilityLevel}",
+  "mixins": [
+    "AuthenticationURLReplacer",
+    "ServerPropertiesReplacer",
+    "ServerPlayerMixin",
+    "DedicatedServerMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

@@ -8,8 +8,7 @@ modrinth {
     versionNumber.set("${version as String}-${name}")
     loaders.addAll(
         when (project.name) {
-            "fabricA26" -> listOf("fabric", "babric", "quilt")
-            "fabricA120B26" -> listOf("fabric", "babric", "quilt")
+            "fabric1211", "fabricA120B1211", "fabric261" -> listOf("fabric", "babric", "quilt")
             "neoforge" -> listOf("neoforge")
             "paper" -> listOf("paper", "purpur")
             "spigot" -> listOf("spigot")
@@ -18,8 +17,9 @@ modrinth {
         }
     )
     uploadFile.set(when (project.name) {
-        "fabricA26" -> tasks.named<net.fabricmc.loom.task.RemapJarTask>("remapJar")
-        "fabricA120B26" -> tasks.named<net.fabricmc.loom.task.RemapJarTask>("remapJar")
+        "fabric1211" -> tasks.named<net.fabricmc.loom.task.RemapJarTask>("remapJar")
+        "fabricA120B1211" -> tasks.named<net.fabricmc.loom.task.RemapJarTask>("remapJar")
+        "fabric261" -> tasks.named<Jar>("jar")
         "neoforge" -> tasks.named<Jar>("jar")
         "paper" -> tasks.named<Jar>("jar")
         "spigot" -> tasks.named<Jar>("jar")
@@ -28,9 +28,10 @@ modrinth {
     })
 
     gameVersions.addAll(when (project.name) {
-        "fabricA26" -> listOf("26.1")
-        "fabricA120B26" -> listOf("1.20", "1.20.1", "1.20.2", "1.20.3", "1.20.4", "1.20.5", "1.20.6",
-            "1.21", "1.21.1", "1.21.2", "1.21.3", "1.21.4", "1.21.5", "1.21.6", "1.21.7", "1.21.8", "1.21.9", "1.21.10", "1.21.11")
+        "fabric261" -> listOf("26.1")
+        "fabric1211" -> listOf("1.21.11")
+        "fabricA120B1211" -> listOf("1.20", "1.20.1", "1.20.2", "1.20.3", "1.20.4", "1.20.5", "1.20.6",
+            "1.21", "1.21.1", "1.21.2", "1.21.3", "1.21.4", "1.21.5", "1.21.6", "1.21.7", "1.21.8", "1.21.9", "1.21.10")
         "neoforge" -> listOf(libs.findVersion("minecraft").get().toString())
         "paper" -> listOf(libs.findVersion("minecraft").get().toString())
         "spigot" -> listOf(libs.findVersion("minecraft").get().toString())

@@ -58,15 +58,44 @@ tasks.register<Copy>("copyCommonSources") {
             line.replace("@loader@", project.name)
         }
     }
+
     from("$rootDir/common/src/main/resources") {
-        exclude("${project.property("modid")}.accesswidener")
-        exclude("${project.property("modid")}.classtweaker")
-        exclude("templates/**")
+        include("accesstransformer.cfg")
+
+        into("common/resources/META-INF")
+    }
+
+    from("$rootDir/common/src/main/resources/assets/lang") {
+        include("*")
+
+        into("common/resources/lang")
+    }
+
+    from("$rootDir/common/src/main/resources/templates") {
+        include("${project.property("modid")}.mixins.json")
+        include("neoforge.mods.toml")
         into("common/resources")
-        filesMatching("**/${project.property("modid")}.mixins.json") {
+
+        filesMatching("${project.property("modid")}.mixins.json") {
             expand(mapOf(
-                "group" to rootProject.group,
+                "group" to project.group,
+                "compatibilityLevel" to "JAVA_17"
             ))
+        }
+
+        filesMatching("neoforge.mods.toml") {
+            expand(mapOf(
+                "minecraftVersion" to libs.versions.minecraft.get(),
+                "neoVersion" to libs.versions.neo.get(),
+                "modid" to rootProject.property("modid"),
+                "modName" to rootProject.name,
+                "modLicense" to project.property("license"),
+                "issueTracker" to project.property("issues"),
+                "modVersion" to rootProject.property("version").toString(),
+                "modAuthor" to project.property("author"),
+                "modDescription" to project.property("description")
+            ))
+            relativePath = RelativePath(true, "common/resources/META-INF/$name")
         }
     }
 
@@ -96,28 +125,6 @@ tasks.named("createMinecraftArtifacts") {
 tasks {
     processResources {
         dependsOn("copyCommonSources")
-        val props = mapOf(
-            "minecraftVersion" to libs.versions.minecraft.get(),
-            "neoVersion" to libs.versions.neo.get(),
-            "modid" to rootProject.property("modid"),
-            "modName" to rootProject.name,
-            "modLicense" to project.property("license"),
-            "issueTracker" to project.property("issues"),
-            "modVersion" to rootProject.property("version").toString(),
-            "modAuthor" to project.property("author"),
-            "modDescription" to project.property("description")
-        )
-
-        from("src/main/templates") {
-            listOf(
-                "META-INF/neoforge.mods.toml",
-            ).forEach {
-                filesMatching(it) {
-                    expand(props)
-                }
-            }
-        }
-        into(layout.buildDirectory.dir("src/main/resources"))
     }
 }
 

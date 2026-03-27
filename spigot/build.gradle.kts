@@ -22,14 +22,22 @@ tasks.register<Copy>("copyCommonSources") {
             line.replace("@loader@", project.name)
         }
     }
-    from("$rootDir/common/src/main/resources") {
-        exclude("META-INF/**")
-        exclude("templates/**")
-        exclude("${project.property("modid")}.accesswidener")
-        exclude("${project.property("modid")}.mixins.json")
-        into("common/resources")
-    }
 
+    from("$rootDir/common/src/main/resources/templates") {
+        include("plugin.yml")
+        into("common/resources")
+
+        filesMatching("plugin.yml") {
+            expand(mapOf(
+                "name" to rootProject.name,
+                "group" to project.group,
+                "version" to rootProject.version,
+                "description" to rootProject.description,
+                "mainFile" to "${rootProject.name}Plugin",
+                "apiVersion" to libs.versions.minecraft.get()
+            ))
+        }
+    }
     into("${layout.buildDirectory}/generated/sources")
 }
 
@@ -50,36 +58,5 @@ tasks.named<JavaCompile>("compileJava") {
 
 tasks {
     processResources {
-        dependsOn("copyCommonSources")
-        val props = mapOf(
-            "name" to rootProject.name,
-            "group" to project.group,
-            "version" to rootProject.version,
-            "description" to rootProject.description,
-            "mainFile" to "${rootProject.name}Plugin",
-            "apiVersion" to libs.versions.minecraft.get()
-        )
-
-        from("src/main/templates") {
-            listOf(
-                "plugin.yml",
-            ).forEach {
-                filesMatching(it) {
-                    expand(props)
-                }
-            }
-        }
-        into(layout.buildDirectory.dir("src/main/resources"))
     }
-    build {
-//        dependsOn("shadowJar")
-    }
-//    shadowJar {
-//        dependencies {
-//            exclude(dependency("com.mojang:brigadier"))
-//        }
-//
-//        relocate("me.lucko.commodore", "me.gamerduck.rules.bukkit.commodore")
-//        archiveClassifier.set("")
-//    }
 }

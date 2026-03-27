@@ -18,8 +18,9 @@ githubRelease {
 
     releaseAssets.setFrom(when (project.name) {
         "standalone" -> tasks.named<Jar>("jar").flatMap { it.archiveFile }
-        "fabricA26" -> tasks.named<net.fabricmc.loom.task.RemapJarTask>("remapJar").flatMap { it.archiveFile }
-        "fabricA120B26" -> tasks.named<net.fabricmc.loom.task.RemapJarTask>("remapJar").flatMap { it.archiveFile }
+        "fabric261" -> tasks.named<Jar>("jar").flatMap { it.archiveFile }
+        "fabric1211" -> tasks.named<net.fabricmc.loom.task.RemapJarTask>("remapJar").flatMap { it.archiveFile }
+        "fabricA120B1211" -> tasks.named<net.fabricmc.loom.task.RemapJarTask>("remapJar").flatMap { it.archiveFile }
         "neoforge" -> tasks.named<Jar>("jar").flatMap { it.archiveFile }
         "paper" -> tasks.named<Jar>("jar").flatMap { it.archiveFile }
         "spigot" -> tasks.named<Jar>("jar").flatMap { it.archiveFile }

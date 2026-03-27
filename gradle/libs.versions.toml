@@ -32,7 +32,6 @@ github-release="2.5.2"
 # Project General
 minecraft = { module = "com.mojang:minecraft", version.ref = "minecraft" }
 fabric_loader = { module = "net.fabricmc:fabric-loader", version.ref = "loader" }
-fabric_api = { module = "net.fabricmc.fabric-api:fabric-api", version.ref = "api" }
 brigadier = { module = "com.mojang:brigadier", version.ref = "brigadier" }
 mixin = { module = "org.spongepowered:mixin", version.ref = "mixin" }
 extras = { module = "io.github.llamalad7:mixinextras-common", version.ref = "extras" }
