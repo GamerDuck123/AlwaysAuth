@@ -12,23 +12,22 @@ tasks.register("publishCurseForge", net.darkhax.curseforgegradle.TaskPublishCurs
     var mainFile = when (project.name) {
         "fabric1211" -> upload(projectId, tasks.named<net.fabricmc.loom.task.RemapJarTask>("remapJar"))
         "fabricA120B26" -> upload(projectId, tasks.named<net.fabricmc.loom.task.RemapJarTask>("remapJar"))
-        "fabric261" -> upload(projectId, tasks.named<Jar>("jar"))
-        "neoforge" -> upload(projectId, tasks.named<Jar>("jar"))
+        "fabric261", "neoforge261", "neoforge1211", "neoforgeA1204B12110" -> upload(projectId, tasks.named<Jar>("jar"))
         else -> throw IllegalStateException("Unknown loader $project.name")
     };
     mainFile.addModLoader(
         when (project.name) {
-            "fabric1211", "fabric261" -> "Fabric"
-            "fabricA120B1211" -> "Fabric"
-            "neoforge" -> "NeoForge"
+            "fabric1211", "fabric261", "fabricA120B1211" -> "Fabric"
+            "neoforge261", "neoforge1211", "neoforgeA1204B12110" -> "NeoForge"
             else -> throw IllegalStateException("Unknown loader $project.name")
         })
 
     mainFile.addGameVersion(when (project.name) {
         "fabric1211" -> libs.findVersion("minecraft").get().toString()
         "fabricA120B1211" -> libs.findVersion("minecraft").get().toString()
-        "fabric261" -> "26.1"
-        "neoforge" -> libs.findVersion("minecraft").get().toString()
+        "neoforgeA1204B12110" -> libs.findVersion("minecraft").get().toString()
+        "neoforge1211" -> libs.findVersion("minecraft").get().toString()
+        "fabric261", "neoforge261" -> "26.1"
         else -> throw IllegalStateException("Unknown loader $project.name")
     })
 

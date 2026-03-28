@@ -1,6 +1,8 @@
-license="${modLicense}"
+modLoader="javafml"
 
-issueTrackerURL="${issueTracker}"
+loaderVersion="${loaderVersion}"
+
+license="${modLicense}"
 
 [[mods]]
 modId="${modid}"

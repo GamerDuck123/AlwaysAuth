@@ -224,13 +224,13 @@ public class SessionProxyServer {
 
             if (debug) platform.sendLogMessage("Authentication request for user: " + username + " (serverId: " + serverId + ")");
 
-            // Reconstruct clean query string for upstream (without auth token or ip —
-            // ip is omitted because preventProxyConnections causes the server to send the
-            // client's loopback address (127.0.0.1), which Mojang rejects since the client's
-            // join request arrives from their external IP instead)
+            // Reconstruct clean query string for upstream (without auth token)
             StringBuilder cleanQuery = new StringBuilder();
             cleanQuery.append("username=").append(URLEncoder.encode(username, "UTF-8"));
             cleanQuery.append("&serverId=").append(URLEncoder.encode(serverId, "UTF-8"));
+            if (ip != null) {
+                cleanQuery.append("&ip=").append(URLEncoder.encode(ip, "UTF-8"));
+            }
 
             try {
                 String upstreamResponse = forwardToUpstream("/session/minecraft/hasJoined", cleanQuery.toString());
@@ -239,12 +239,10 @@ public class SessionProxyServer {
                     JsonObject profile = gson.fromJson(upstreamResponse, JsonObject.class);
                     database.cacheAuthentication(username, ip, profile);
                     if (debug) platform.sendLogMessage("Successfully authenticated " + username + " via Upstream");
-                    sendResponse(exchange, 200, upstreamResponse);
-                    return;
                 }
 
-                // Mojang returned 204 (no session found) — fall through to fallback
-                throw new IOException("Upstream returned no session data (player may not have joined via Mojang)");
+                sendResponse(exchange, 200, upstreamResponse);
+                return;
 
             } catch (Exception e) {
                 platform.sendWarningLogMessage("Upstream authentication failed for " + username + ": " + e.getMessage());
