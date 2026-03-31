@@ -1,0 +1,30 @@
+license="GNUv3"
+
+issueTrackerURL="https://github.com/GamerDuck123/AlwaysAuth/issues"
+
+[[mods]]
+modId="alwaysauth"
+version="0.5.0"
+displayName="AlwaysAuth"
+authors="GamerDuck123"
+description='''Keep your server always online even when mojang isnt!'''
+
+[[mixins]]
+config="alwaysauth.mixins.json"
+
+[[accessTransformers]]
+file="META-INF/accesstransformer.cfg"
+
+[[dependencies.alwaysauth]]
+    modId="neoforge"
+    type="required"
+    versionRange="[21.11.42]"
+    ordering="NONE"
+    side="BOTH"
+
+[[dependencies.alwaysauth]]
+    modId="minecraft"
+    type="required"
+    versionRange="[1.12.11]"
+    ordering="NONE"
+    side="BOTH"

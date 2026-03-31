@@ -1,4 +1,4 @@
-package me.gamerduck.alwaysauth.neoforge261;
+package me.gamerduck.alwaysauth.neoforge1211;
 
 import com.mojang.authlib.HttpAuthenticationService;
 import com.mojang.logging.LogUtils;
@@ -6,6 +6,10 @@ import me.gamerduck.alwaysauth.Platform;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
+//? >=1.21.11 {
+import net.minecraft.server.permissions.Permission;
+import net.minecraft.server.permissions.PermissionLevel;
+//?}
 import org.slf4j.Logger;
 
 import java.lang.reflect.Field;
@@ -68,7 +72,10 @@ public class NeoForgePlatform extends Platform<CommandSourceStack> {
 
     @Override
     public boolean hasPermission(CommandSourceStack commandSender, String permission) {
-        return false;
+        //? >=1.21.11 {
+        return commandSender.permissions().hasPermission(new Permission.HasCommandLevel(PermissionLevel.ADMINS));
+        //?} else
+        /*return commandSender.hasPermission(4);*/
     }
 
     @Override

@@ -63,6 +63,11 @@ public class PaperPlatform extends Platform<CommandSourceStack> implements Liste
     }
 
     @Override
+    public boolean hasPermission(CommandSourceStack commandSender, String permission) {
+        return false;
+    }
+
+    @Override
     public void sendLogMessage(String msg) {
         LOGGER.info(msg.replaceAll("§.", ""));
     }

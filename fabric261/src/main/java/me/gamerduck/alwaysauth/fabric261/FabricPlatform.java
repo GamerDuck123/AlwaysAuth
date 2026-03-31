@@ -26,6 +26,11 @@ public class FabricPlatform extends Platform<CommandSourceStack> {
     }
 
     @Override
+    public boolean hasPermission(CommandSourceStack commandSender, String permission) {
+        return false;
+    }
+
+    @Override
     public void sendLogMessage(String msg) {
         LOGGER.info(msg.replaceAll("§.", ""));
     }

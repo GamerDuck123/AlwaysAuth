@@ -38,7 +38,7 @@ tasks {
     }
 
     assemble {
-        dependsOn(subprojects.filter { it.name !in listOf("common", "fabric") }.map {
+        dependsOn(subprojects.filter { it.name !in listOf("common", "fabric", "neoforge") }.map {
             it.tasks.named("clean")
             it.tasks.named("copyCommonSources")
             it.tasks.named("processResources")
@@ -46,7 +46,7 @@ tasks {
         })
     }
     register<Copy>("copyCommonSources") {
-        dependsOn(subprojects.filter { it.name !in listOf("common", "fabric") }.map {
+        dependsOn(subprojects.filter { it.name !in listOf("common", "fabric", "neoforge") }.map {
             it.tasks.named("copyCommonSources")
         })
     }

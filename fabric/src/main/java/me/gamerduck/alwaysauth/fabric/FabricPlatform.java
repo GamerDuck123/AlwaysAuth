@@ -7,8 +7,7 @@ import net.minecraft.server.MinecraftServer;
 //? >=1.21.11 {
 import net.minecraft.server.permissions.Permission;
 import net.minecraft.server.permissions.PermissionLevel;
-//?} else
-/**/
+//?}
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

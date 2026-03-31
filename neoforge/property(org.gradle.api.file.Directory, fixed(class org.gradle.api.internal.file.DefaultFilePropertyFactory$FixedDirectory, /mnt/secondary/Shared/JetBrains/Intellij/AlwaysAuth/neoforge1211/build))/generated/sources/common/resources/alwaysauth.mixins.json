@@ -1,0 +1,14 @@
+{
+  "required": true,
+  "package": "me.gamerduck.alwaysauth.neoforge1211.mixins",
+  "compatibilityLevel": "JAVA_17",
+  "mixins": [
+    "AuthenticationURLReplacer",
+    "ServerPropertiesReplacer",
+    "ServerPlayerMixin",
+    "DedicatedServerMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

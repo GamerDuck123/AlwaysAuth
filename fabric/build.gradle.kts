@@ -81,7 +81,7 @@ tasks.register<Copy>("copyCommonSources") {
         filesMatching("${project.property("modid")}.mixins.json") {
             expand(
                 mapOf(
-                    "group" to project.group,
+                    "group" to "me.gamerduck.alwaysauth.fabric",
                     "compatibilityLevel" to "JAVA_17"
                 )
             )
@@ -91,7 +91,7 @@ tasks.register<Copy>("copyCommonSources") {
             expand(
                 mapOf(
                     "name" to rootProject.name,
-                    "group" to project.group,
+                    "group" to "me.gamerduck.alwaysauth.fabric",
                     "version" to rootProject.version,
                     "modid" to rootProject.property("modid"),
                     "mainFile" to "${rootProject.name}Mod",
@@ -104,9 +104,9 @@ tasks.register<Copy>("copyCommonSources") {
                     "sources" to project.property("sources"),
                     "issues" to project.property("issues"),
                     "accessWidenerEnd" to if (sc.current.parsed >= "1.21.11") "classtweaker" else "accesswidener",
-                    "fabricLoader" to ">=0.18",
+                    "fabricLoader" to ">=0.15",
                     "minecraftVersions" to ">=${sc.current.version}",
-                    "javaVersions" to ">=25",
+                    "javaVersions" to ">=17",
                 )
             )
         }
