@@ -7,6 +7,7 @@ val libs = extensions.getByType(VersionCatalogsExtension::class.java).named("lib
 modrinth {
     versionNumber.set("${version as String}-${when (project.name) {
         "fabric1211" -> "fabric-1.21.11"
+        "fabric" -> "fabric-1.21.11"
         "fabricA120B12111" -> "fabric-1.20-1.21.10"
         "fabric261" -> "fabric-26.1"
         "neoforge261" -> "neoforge-26.1"
@@ -19,7 +20,7 @@ modrinth {
     }}")
     loaders.addAll(
         when (project.name) {
-            "fabric1211", "fabricA120B12111", "fabric261" -> listOf("fabric", "babric", "quilt")
+            "fabric1211", "fabric", "fabricA120B12111", "fabric261" -> listOf("fabric", "babric", "quilt")
             "neoforge261", "neoforge1211", "neoforgeA1204B12111" -> listOf("neoforge")
             "paper" -> listOf("paper", "purpur")
             "spigot" -> listOf("spigot")
@@ -29,12 +30,13 @@ modrinth {
     )
     uploadFile.set(when (project.name) {
         "fabric1211", "fabricA120B12111" -> tasks.named<net.fabricmc.loom.task.RemapJarTask>("remapJar")
-        "paper", "spigot", "velocity", "neoforge261", "neoforge1211", "neoforgeA1204B12111", "fabric261" -> tasks.named<Jar>("jar")
+        "paper", "spigot", "fabric", "velocity", "neoforge261", "neoforge1211", "neoforgeA1204B12111", "fabric261" -> tasks.named<Jar>("jar")
         else -> throw IllegalStateException("Unknown loader $name")
     })
 
     gameVersions.addAll(when (project.name) {
         "fabric261", "neoforge261" -> listOf("26.1")
+        "fabric" -> listOf("26.1")
         "fabric1211", "neoforge1211" -> listOf("1.21.11")
         "fabricA120B12111" -> listOf("1.20", "1.20.1", "1.20.2", "1.20.3", "1.20.4", "1.20.5", "1.20.6",
             "1.21", "1.21.1", "1.21.2", "1.21.3", "1.21.4", "1.21.5", "1.21.6", "1.21.7", "1.21.8", "1.21.9", "1.21.10")

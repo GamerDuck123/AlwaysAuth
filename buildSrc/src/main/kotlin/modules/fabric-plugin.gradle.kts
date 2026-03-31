@@ -2,9 +2,9 @@ plugins {
     id("root-plugin")
 
     id("fabric-loom")
-    id("modrinth-plugin")
-    id("curseforge-plugin")
-    id("github-plugin")
+//    id("modrinth-plugin")
+//    id("curseforge-plugin")
+//    id("github-plugin")
 }
 
 repositories {

@@ -10,13 +10,13 @@ tasks.register("publishCurseForge", net.darkhax.curseforgegradle.TaskPublishCurs
     val projectId = rootProject.property("curseforgeID") as String?
 
     var mainFile = when (project.name) {
-        "fabric1211", "fabricA120B12111" -> upload(projectId, tasks.named<net.fabricmc.loom.task.RemapJarTask>("remapJar"))
+        "fabric1211", "fabric", "fabricA120B12111" -> upload(projectId, tasks.named<net.fabricmc.loom.task.RemapJarTask>("remapJar"))
         "fabric261", "neoforge261", "neoforge1211", "neoforgeA1204B12111" -> upload(projectId, tasks.named<Jar>("jar"))
         else -> throw IllegalStateException("Unknown loader $project.name")
     };
     mainFile.addModLoader(
         when (project.name) {
-            "fabric1211", "fabric261", "fabricA120B12111" -> "Fabric"
+            "fabric1211", "fabric", "fabric261", "fabricA120B12111" -> "Fabric"
             "neoforge261", "neoforge1211", "neoforgeA1204B12111" -> "NeoForge"
             else -> throw IllegalStateException("Unknown loader $project.name")
         })
@@ -59,13 +59,13 @@ tasks.register("publishCurseForge", net.darkhax.curseforgegradle.TaskPublishCurs
             mainFile.addGameVersion("1.21.9")
             mainFile.addGameVersion("1.21.10")
         }
-        "fabric261", "neoforge261" -> mainFile.addGameVersion("26.1")
+        "fabric261", "fabric", "neoforge261" -> mainFile.addGameVersion("26.1")
         else -> throw IllegalStateException("Unknown loader $project.name")
     }
 
     mainFile.releaseType = rootProject.property("versionType") as String
     mainFile.displayName = "${rootProject.version as String}-${when (project.name) {
-        "fabric1211" -> "fabric-1.21.11"
+        "fabric1211", "fabric" -> "fabric-1.21.11"
         "fabricA120B12111" -> "fabric-1.20-1.21.10"
         "fabric261" -> "fabric-26.1"
         "neoforge261" -> "neoforge-26.1"

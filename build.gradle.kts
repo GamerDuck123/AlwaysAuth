@@ -1,15 +1,7 @@
 plugins {
     id("root-plugin")
-    id("com.replaymod.preprocess-root")
 }
 
-preprocess {
-    // fabric1211 is the root node; fabricA120B12111 is a child (linked for source migration)
-    // mappings strings: "official" = Mojang, "yarn" = Fabric yarn
-    "fabric1211"(12111, "official") {
-        "fabricA120B12111"(12010, "yarn")
-    }
-}
 
 defaultTasks("build")
 
@@ -46,7 +38,7 @@ tasks {
     }
 
     assemble {
-        dependsOn(subprojects.filter { it.name !in listOf("common") }.map {
+        dependsOn(subprojects.filter { it.name !in listOf("common", "fabric") }.map {
             it.tasks.named("clean")
             it.tasks.named("copyCommonSources")
             it.tasks.named("processResources")
@@ -54,7 +46,7 @@ tasks {
         })
     }
     register<Copy>("copyCommonSources") {
-        dependsOn(subprojects.filter { it.name !in listOf("common") }.map {
+        dependsOn(subprojects.filter { it.name !in listOf("common", "fabric") }.map {
             it.tasks.named("copyCommonSources")
         })
     }

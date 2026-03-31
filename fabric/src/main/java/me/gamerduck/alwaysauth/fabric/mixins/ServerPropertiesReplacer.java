@@ -1,4 +1,4 @@
-package me.gamerduck.alwaysauth.fabric1211.mixins;
+package me.gamerduck.alwaysauth.fabric.mixins;
 
 import net.minecraft.server.dedicated.DedicatedServerProperties;
 import org.spongepowered.asm.mixin.Mixin;

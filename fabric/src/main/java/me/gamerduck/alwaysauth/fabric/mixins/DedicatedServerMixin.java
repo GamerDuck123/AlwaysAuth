@@ -1,8 +1,8 @@
-package me.gamerduck.alwaysauth.fabricA120B1211.mixins;
+package me.gamerduck.alwaysauth.fabric.mixins;
 
-import me.gamerduck.alwaysauth.fabricA120B1211.FabricPlatform;
+import me.gamerduck.alwaysauth.fabric.FabricPlatform;
+import net.minecraft.commands.Commands;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.command.CommandManager;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -11,10 +11,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(MinecraftServer.class)
 public abstract class DedicatedServerMixin {
 
-    @Inject(method = "shutdown", at = @At(value = "RETURN"))
+    @Inject(method = "stopServer", at = @At(value = "RETURN"))
     private void injectedShutdown(CallbackInfo ci) {
         MinecraftServer self = (MinecraftServer)(Object) this;
-        if (self.isDedicated()) {
+        if (self.isDedicatedServer()) {
             FabricPlatform.instance.onDisable();
         }
     }
@@ -23,51 +23,51 @@ public abstract class DedicatedServerMixin {
     private void injected(CallbackInfo ci) {
 
         MinecraftServer self = (MinecraftServer)(Object) this;
-        self.getCommandManager().getDispatcher().register(CommandManager.literal("alwaysauth")
-                .requires(source -> source.hasPermissionLevel(4))
+        self.getCommands().getDispatcher().register(Commands.literal("alwaysauth")
+                .requires(source -> FabricPlatform.instance.hasPermission(source, ""))
                 .executes(context -> {
                     FabricPlatform.instance.cmdHelp(context.getSource());
                     return 1;
                 })
-                .then(CommandManager.literal("status")
+                .then(Commands.literal("status")
                         .executes(context -> {
                             FabricPlatform.instance.cmdStatus(context.getSource());
                             return 1;
                         })
                 )
-                .then(CommandManager.literal("stats")
+                .then(Commands.literal("stats")
                         .executes(context -> {
                             FabricPlatform.instance.cmdStats(context.getSource());
                             return 1;
                         })
                 )
-                .then(CommandManager.literal("toggle")
+                .then(Commands.literal("toggle")
                         .executes(context -> {
                             FabricPlatform.instance.cmdToggle(context.getSource());
                             return 1;
                         })
                 )
-                .then(CommandManager.literal("security")
-                        .then(CommandManager.literal("basic")
+                .then(Commands.literal("security")
+                        .then(Commands.literal("basic")
                                 .executes(context -> {
                                     FabricPlatform.instance.cmdSecurity(context.getSource(), "basic");
                                     return 1;
                                 })
                         )
-                        .then(CommandManager.literal("medium")
+                        .then(Commands.literal("medium")
                                 .executes(context -> {
                                     FabricPlatform.instance.cmdSecurity(context.getSource(), "medium");
                                     return 1;
                                 })
                         )
                 )
-                .then(CommandManager.literal("cleanup")
+                .then(Commands.literal("cleanup")
                         .executes(context -> {
                             FabricPlatform.instance.cmdCleanup(context.getSource());
                             return 1;
                         })
                 )
-                .then(CommandManager.literal("reload")
+                .then(Commands.literal("reload")
                         .executes(context -> {
                             FabricPlatform.instance.cmdReload(context.getSource());
                             return 1;

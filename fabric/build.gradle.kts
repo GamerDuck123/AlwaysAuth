@@ -2,27 +2,45 @@ plugins {
     id("fabric-plugin")
 }
 
+val requiredJava = when {
+    sc.current.parsed >= "1.21.11" -> JavaVersion.VERSION_25
+    sc.current.parsed >= "1.20.5" -> JavaVersion.VERSION_21
+    sc.current.parsed >= "1.18" -> JavaVersion.VERSION_17
+    sc.current.parsed >= "1.17" -> JavaVersion.VERSION_16
+    else -> JavaVersion.VERSION_1_8
+}
+
 
 dependencies {
-    minecraft("com.mojang:minecraft:1.21.11")
+    minecraft("com.mojang:minecraft:${sc.current.version}")
 
-    mappings(loom.officialMojangMappings())
+    if (sc.current.parsed <= "1.21.11") mappings(loom.officialMojangMappings())
 
-    modImplementation(libs.fabric.loader)
+    if (sc.current.parsed <= "1.21.11") {
+        modImplementation(libs.fabric.loader)
 
-    implementation(libs.authlib)
+        modImplementation(libs.authlib)
 
-    implementation(libs.h2)
-    include(libs.h2)
-    implementation(libs.gson)
-    include(libs.gson)
+        modImplementation(libs.h2)
+        include(libs.h2)
+        modImplementation(libs.gson)
+        include(libs.gson)
+    } else {
+        implementation(libs.fabric.loader)
+
+        implementation(libs.authlib)
+
+        implementation(libs.h2)
+        include(libs.h2)
+        implementation(libs.gson)
+        include(libs.gson)
+    }
 }
 
 tasks.register<Copy>("copyCommonSources") {
     from("$rootDir/common/src/main/java") {
         exclude("me/gamerduck/${project.property("modid")}/reflection/**")
         into("common/java")
-
 
         filter { line: String ->
             line.replace("@version@", project.version.toString())
@@ -36,9 +54,15 @@ tasks.register<Copy>("copyCommonSources") {
     }
 
     from("$rootDir/common/src/main/resources") {
-        include("12111alwaysauth.classtweaker")
-        filesMatching("12111alwaysauth.classtweaker") {
-            relativePath = RelativePath(true, "common/resources/alwaysauth.classtweaker")
+        if (sc.current.parsed >= "1.21.11") {
+            include("12111alwaysauth.classtweaker")
+            filesMatching("12111alwaysauth.classtweaker") {
+                relativePath = RelativePath(true, "common/resources/alwaysauth.classtweaker")
+            }
+        } else if (sc.current.parsed >= "26.1") {
+            include("alwaysauth.classtweaker")
+        } else {
+            include("alwaysauth.accesswidener")
         }
 
         into("common/resources")
@@ -46,7 +70,6 @@ tasks.register<Copy>("copyCommonSources") {
 
     from("$rootDir/common/src/main/resources/assets") {
         include("icon.png")
-
         into("common/resources/assets/alwaysauth")
     }
 
@@ -59,7 +82,7 @@ tasks.register<Copy>("copyCommonSources") {
             expand(
                 mapOf(
                     "group" to project.group,
-                    "compatibilityLevel" to "JAVA_21"
+                    "compatibilityLevel" to "JAVA_17"
                 )
             )
         }
@@ -80,31 +103,31 @@ tasks.register<Copy>("copyCommonSources") {
                     "website" to project.property("website"),
                     "sources" to project.property("sources"),
                     "issues" to project.property("issues"),
-                    "accessWidenerEnd" to "classtweaker",
+                    "accessWidenerEnd" to if (sc.current.parsed >= "1.21.11") "classtweaker" else "accesswidener",
                     "fabricLoader" to ">=0.18",
-                    "minecraftVersions" to "=1.21.11",
-                    "javaVersions" to ">=21",
+                    "minecraftVersions" to ">=${sc.current.version}",
+                    "javaVersions" to ">=25",
                 )
             )
         }
     }
 
-    into("${layout.buildDirectory}/generated/sources")
+    into(layout.buildDirectory.dir("generated/sources"))
 }
 
 sourceSets {
     main {
         java {
-            srcDir("${layout.buildDirectory}/generated/sources/common/java")
+            srcDir(layout.buildDirectory.dir("generated/sources/common/java"))
         }
         resources {
-            srcDir("${layout.buildDirectory}/generated/sources/common/resources")
+            srcDir(layout.buildDirectory.dir("generated/sources/common/resources"))
         }
     }
 }
 
 loom {
-    accessWidenerPath.set(file("../common/src/main/resources/${project.property("modid")}.classtweaker"))
+    accessWidenerPath.set(rootProject.file("common/src/main/resources/${rootProject.property("modid")}.classtweaker"))
 
     mods {
         create(project.property("modid").toString()) {
@@ -118,12 +141,12 @@ tasks {
     compileJava {
         dependsOn("copyCommonSources")
     }
-    build {
-        dependsOn(remapJar)
-    }
-    remapJar {
+    jar {
         destinationDirectory.set(file("${rootProject.layout.projectDirectory}/build/all"))
-        archiveFileName.set("${rootProject.name}-fabric-12111-${rootProject.version}.jar")
+        archiveFileName.set("${rootProject.name}-fabric-261-${rootProject.version}.jar")
+    }
+    build {
+//        destinationDirectory.set(file("${rootProject.layout.projectDirectory}/build/all"))
     }
     processResources {
         dependsOn("copyCommonSources")

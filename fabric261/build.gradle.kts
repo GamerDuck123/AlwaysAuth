@@ -33,7 +33,11 @@ tasks.register<Copy>("copyCommonSources") {
     }
 
     from("$rootDir/common/src/main/resources") {
-        include("alwaysauth.classtweaker")
+        include("12111alwaysauth.classtweaker")
+        filesMatching("12111alwaysauth.classtweaker") {
+            relativePath = RelativePath(true, "common/resources/alwaysauth.classtweaker")
+        }
+
 
         into("common/resources")
     }
@@ -83,16 +87,16 @@ tasks.register<Copy>("copyCommonSources") {
         }
     }
 
-    into("${layout.buildDirectory}/generated/sources")
+    into(layout.buildDirectory.dir("generated/sources"))
 }
 
 sourceSets {
     main {
         java {
-            srcDir("${layout.buildDirectory}/generated/sources/common/java")
+            srcDir(layout.buildDirectory.dir("generated/sources/common/java"))
         }
         resources {
-            srcDir("${layout.buildDirectory}/generated/sources/common/resources")
+            srcDir(layout.buildDirectory.dir("generated/sources/common/resources"))
         }
     }
 }
