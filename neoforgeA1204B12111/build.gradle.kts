@@ -23,11 +23,11 @@ dependencies {
 
 neoForge {
 
-    version = "21.11.42"
+    version = "20.4.251"
 
     parchment {
-        mappingsVersion = "2025.12.20"
-        minecraftVersion = "1.21.11"
+        mappingsVersion = "2024.04.14"
+        minecraftVersion = "1.20.4"
     }
 
     mods {
@@ -72,21 +72,22 @@ tasks.register<Copy>("copyCommonSources") {
     }
 
     from("$rootDir/common/src/main/resources/templates") {
-        include("${project.property("modid")}.mixins.json")
-        include("neoforge.mods.toml")
+//        include("${project.property("modid")}.mixins.json")
+        include("1.20.neoforge.mods.toml")
         into("common/resources")
 
-        filesMatching("${project.property("modid")}.mixins.json") {
-            expand(mapOf(
-                "group" to project.group,
-                "compatibilityLevel" to "JAVA_17"
-            ))
-        }
+//        filesMatching("${project.property("modid")}.mixins.json") {
+//            expand(mapOf(
+//                "group" to project.group,
+//                "compatibilityLevel" to "JAVA_17"
+//            ))
+//        }
 
-        filesMatching("neoforge.mods.toml") {
+        filesMatching("1.20.neoforge.mods.toml") {
             expand(mapOf(
-                "minecraftVersion" to "[1.12.11]",
-                "neoVersion" to "[21.11.42]",
+                "minecraftVersion" to "[1.20.4, 1.21.10]",// 1.20.6]",
+                "neoVersion" to "[20.4.251, 21.10.64]", //20.6.139]",
+                "loaderVersion" to "[1,)",
                 "modid" to rootProject.property("modid"),
                 "modName" to rootProject.name,
                 "modLicense" to project.property("license"),
@@ -95,7 +96,7 @@ tasks.register<Copy>("copyCommonSources") {
                 "modAuthor" to project.property("author"),
                 "modDescription" to project.property("description")
             ))
-            relativePath = RelativePath(true, "common/resources/META-INF/$name")
+            relativePath = RelativePath(true, "common/resources/META-INF/neoforge.mods.toml")
         }
     }
 
@@ -128,7 +129,7 @@ tasks {
     }
     jar {
         destinationDirectory.set(file("${rootProject.layout.projectDirectory}/build/all"))
-        archiveFileName.set("${rootProject.name}-neoforge-1211-${rootProject.version}.jar")
+        archiveFileName.set("${rootProject.name}-neoforge-1204-12111-${rootProject.version}.jar")
     }
 }
 

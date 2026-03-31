@@ -3,11 +3,9 @@ plugins {
 }
 
 dependencies {
-    paperweight.paperDevBundle("${libs.versions.minecraft.get()}-R0.1-SNAPSHOT")
+    compileOnly("io.papermc.paper:paper-api:1.21.4-R0.1-SNAPSHOT")
     compileOnly(libs.brigadier)
 }
-paperweight.reobfArtifactConfiguration = io.papermc.paperweight.userdev.ReobfArtifactConfiguration.MOJANG_PRODUCTION
-
 
 tasks.register<Copy>("copyCommonSources") {
     from("$rootDir/common/src/main/java") {
@@ -36,7 +34,7 @@ tasks.register<Copy>("copyCommonSources") {
                 "version" to rootProject.version,
                 "mainFile" to "${rootProject.name}Plugin",
                 "description" to rootProject.description,
-                "apiVersion" to libs.versions.minecraft.get()
+                "apiVersion" to "1.20"
             ))
         }
     }

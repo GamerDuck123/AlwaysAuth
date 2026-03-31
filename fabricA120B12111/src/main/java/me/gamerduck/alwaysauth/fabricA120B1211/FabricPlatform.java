@@ -1,15 +1,15 @@
-package me.gamerduck.alwaysauth.fabric1211;
+package me.gamerduck.alwaysauth.fabricA120B1211;
 
 import me.gamerduck.alwaysauth.Platform;
-import net.minecraft.commands.CommandSourceStack;
-import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.command.ServerCommandSource;
+import net.minecraft.text.Text;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.file.Path;
 
-public class FabricPlatform extends Platform<CommandSourceStack> {
+public class FabricPlatform extends Platform<ServerCommandSource> {
 
     public static final Logger LOGGER = LoggerFactory.getLogger("alwaysauth");
     private MinecraftServer minecraftServer;
@@ -21,15 +21,17 @@ public class FabricPlatform extends Platform<CommandSourceStack> {
     }
 
     @Override
-    public void sendMessage(CommandSourceStack commandSender, String msg) {
-        commandSender.sendSystemMessage(Component.literal(msg));
+    public void sendMessage(ServerCommandSource commandSender, String msg) {
+        commandSender.sendMessage(Text.literal(msg));
     }
 
     @Override
-    public boolean hasPermission(CommandSourceStack commandSender, String permission) {
-        // TODO: Replace with the 1.21.11 API once exact Mojang mapping imports are confirmed:
-        //   return commandSender.permissions().hasPermission(new Permission.HasCommandLevel(PermissionLevel.ADMINS));
-        return commandSender.hasPermission(4);
+    public boolean hasPermission(ServerCommandSource commandSender, String permission) {
+        //#if MC >= 12111
+        //$$ return commandSender.permissions().hasPermission(new net.minecraft.server.command.Permission.HasCommandLevel(net.minecraft.server.command.PermissionLevel.ADMINS));
+        //#else
+        return commandSender.hasPermissionLevel(4);
+        //#endif
     }
 
     @Override

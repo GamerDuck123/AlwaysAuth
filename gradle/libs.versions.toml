@@ -27,6 +27,7 @@ minotaur="2.8.10"
 curseforge="1.1.26"
 hangar="0.1.3"
 github-release="2.5.2"
+preprocessor="1678b67969"
 
 [libraries]
 # Project General
@@ -53,7 +54,7 @@ minotaur = { module = "com.modrinth.minotaur:Minotaur", version.ref = "minotaur"
 curseforge = { module = "net.darkhax.curseforgegradle:net.darkhax.curseforgegradle.gradle.plugin", version.ref = "curseforge" }
 hangar = { module = "io.papermc.hangar-publish-plugin:io.papermc.hangar-publish-plugin.gradle.plugin", version.ref = "hangar" }
 github-release = { module = "com.github.breadmoirai:github-release", version.ref = "github-release" }
-
+preprocessor = { module = "com.github.ReplayMod:preprocessor", version.ref = "preprocessor" }
 [bundles]
 build = [
     "shadow-gradle-plugin",
@@ -63,5 +64,6 @@ build = [
     "minotaur",
     "curseforge",
     "hangar",
-    "github-release"
+    "github-release",
+    "preprocessor"
 ]

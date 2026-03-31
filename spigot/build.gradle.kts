@@ -3,7 +3,7 @@ plugins {
 }
 
 dependencies {
-    compileOnly("org.spigotmc:spigot-api:${libs.versions.minecraft.get()}-R0.1-SNAPSHOT")
+    compileOnly("org.bukkit:bukkit:1.8.8-R0.1-SNAPSHOT")
     implementation(libs.authlib)
 }
 
@@ -34,7 +34,7 @@ tasks.register<Copy>("copyCommonSources") {
                 "version" to rootProject.version,
                 "description" to rootProject.description,
                 "mainFile" to "${rootProject.name}Plugin",
-                "apiVersion" to libs.versions.minecraft.get()
+                "apiVersion" to "1.8"
             ))
         }
     }
@@ -58,5 +58,6 @@ tasks.named<JavaCompile>("compileJava") {
 
 tasks {
     processResources {
+        dependsOn("copyCommonSources")
     }
 }

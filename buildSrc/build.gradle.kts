@@ -5,6 +5,7 @@ plugins {
 repositories {
     gradlePluginPortal()
     maven("https://maven.fabricmc.net")
+    maven("https://jitpack.io")
 }
 
 dependencies {

@@ -17,16 +17,8 @@ githubRelease {
     prerelease.set((rootProject.property("versionType") as String) != "release")
 
     releaseAssets.setFrom(when (project.name) {
-        "standalone" -> tasks.named<Jar>("jar").flatMap { it.archiveFile }
-        "fabric261" -> tasks.named<Jar>("jar").flatMap { it.archiveFile }
-        "fabric1211" -> tasks.named<net.fabricmc.loom.task.RemapJarTask>("remapJar").flatMap { it.archiveFile }
-        "fabricA120B1211" -> tasks.named<net.fabricmc.loom.task.RemapJarTask>("remapJar").flatMap { it.archiveFile }
-        "neoforge261" -> tasks.named<Jar>("jar").flatMap { it.archiveFile }
-        "neoforgeA1204B12110" -> tasks.named<Jar>("jar").flatMap { it.archiveFile }
-        "neoforge1211" -> tasks.named<Jar>("jar").flatMap { it.archiveFile }
-        "paper" -> tasks.named<Jar>("jar").flatMap { it.archiveFile }
-        "spigot" -> tasks.named<Jar>("jar").flatMap { it.archiveFile }
-        "velocity" -> tasks.named<Jar>("jar").flatMap { it.archiveFile }
+        "fabricA120B12111", "fabric1211" -> tasks.named<net.fabricmc.loom.task.RemapJarTask>("remapJar").flatMap { it.archiveFile }
+        "neoforgeA1204B12111", "neoforge261", "neoforge1211", "fabric261", "standalone", "paper", "spigot", "velocity" -> tasks.named<Jar>("jar").flatMap { it.archiveFile }
         else -> throw IllegalStateException("Unknown module for GitHub publishing: ${project.name}")
     })
 

@@ -75,7 +75,7 @@ tasks.register<Copy>("copyCommonSources") {
                     "sources" to project.property("sources"),
                     "issues" to project.property("issues"),
                     "accessWidenerEnd" to "classtweaker",
-                    "fabricLoader" to ">=18",
+                    "fabricLoader" to ">=0.18",
                     "minecraftVersions" to ">=26.1",
                     "javaVersions" to ">=25",
                 )
@@ -111,6 +111,10 @@ loom {
 tasks {
     compileJava {
         dependsOn("copyCommonSources")
+    }
+    jar {
+        destinationDirectory.set(file("${rootProject.layout.projectDirectory}/build/all"))
+        archiveFileName.set("${rootProject.name}-fabric-261-${rootProject.version}.jar")
     }
     build {
 //        destinationDirectory.set(file("${rootProject.layout.projectDirectory}/build/all"))

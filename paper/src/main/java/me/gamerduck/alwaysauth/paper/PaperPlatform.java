@@ -2,20 +2,11 @@ package me.gamerduck.alwaysauth.paper;
 
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import me.gamerduck.alwaysauth.Platform;
-import me.gamerduck.alwaysauth.api.updates.ModrinthUpdateChecker;
 import me.gamerduck.alwaysauth.reflection.AuthenticationURLReplacer;
 import me.gamerduck.alwaysauth.reflection.ServerPropertiesReplacer;
-import io.papermc.paper.advancement.AdvancementDisplay;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
-import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.*;
-import org.bukkit.advancement.Advancement;
-import org.bukkit.craftbukkit.CraftServer;
 import org.bukkit.event.EventHandler;
-import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.player.PlayerAdvancementDoneEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 

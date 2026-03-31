@@ -1,35 +1,25 @@
-package me.gamerduck.alwaysauth.fabric1211;
+package me.gamerduck.alwaysauth.neoforgeA1204B12111;
 
+import com.mojang.logging.LogUtils;
 import me.gamerduck.alwaysauth.Platform;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.nio.file.Path;
 
-public class FabricPlatform extends Platform<CommandSourceStack> {
+public class NeoForgePlatform extends Platform<CommandSourceStack> {
 
-    public static final Logger LOGGER = LoggerFactory.getLogger("alwaysauth");
-    private MinecraftServer minecraftServer;
-    public static FabricPlatform instance;
+    public static final Logger LOGGER = LogUtils.getLogger();
 
-    public FabricPlatform() {
+    public NeoForgePlatform() {
         super(Path.of("config/AlwaysAuth"));
-        instance = this;
     }
 
     @Override
     public void sendMessage(CommandSourceStack commandSender, String msg) {
         commandSender.sendSystemMessage(Component.literal(msg));
-    }
-
-    @Override
-    public boolean hasPermission(CommandSourceStack commandSender, String permission) {
-        // TODO: Replace with the 1.21.11 API once exact Mojang mapping imports are confirmed:
-        //   return commandSender.permissions().hasPermission(new Permission.HasCommandLevel(PermissionLevel.ADMINS));
-        return commandSender.hasPermission(4);
     }
 
     @Override

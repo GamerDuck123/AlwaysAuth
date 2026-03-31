@@ -101,6 +101,8 @@ public abstract class Platform<CS> {
      */
     public abstract void sendMessage(CS commandSender, String msg);
 
+    public abstract boolean hasPermission(CS commandSender, String permission);
+
     /**
      * Logs an info-level message to the platform's logger.
      *

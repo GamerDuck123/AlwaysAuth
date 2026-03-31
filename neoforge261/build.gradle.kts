@@ -121,6 +121,10 @@ tasks {
     processResources {
         dependsOn("copyCommonSources")
     }
+    jar {
+        destinationDirectory.set(file("${rootProject.layout.projectDirectory}/build/all"))
+        archiveFileName.set("${rootProject.name}-neoforge-261-${rootProject.version}.jar")
+    }
 }
 
 tasks.withType<JavaCompile>().configureEach {

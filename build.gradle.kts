@@ -1,5 +1,14 @@
 plugins {
     id("root-plugin")
+    id("com.replaymod.preprocess-root")
+}
+
+preprocess {
+    // fabric1211 is the root node; fabricA120B12111 is a child (linked for source migration)
+    // mappings strings: "official" = Mojang, "yarn" = Fabric yarn
+    "fabric1211"(12111, "official") {
+        "fabricA120B12111"(12010, "yarn")
+    }
 }
 
 defaultTasks("build")
@@ -17,10 +26,10 @@ allprojects {
 
 tasks {
     publish {
-        dependsOn(subprojects.filter { it.name in listOf("paper", "fabric", "neoforge", "spigot", "velocity") }.map { it.tasks.named("modrinth") })
-        dependsOn(subprojects.filter { it.name in listOf("paper", "velocity") }.map { it.tasks.named("publishPluginPublicationToHangar") })
-        dependsOn(subprojects.filter { it.name in listOf("fabric", "neoforge") }.map { it.tasks.named("publishCurseForge") })
-        dependsOn(subprojects.filter { it.name in listOf("standalone", "paper", "fabric", "neoforge", "spigot", "velocity") }.map { it.tasks.named("githubRelease") })
+//        dependsOn(subprojects.filter { it.name in listOf("paper", "fabric261", "fabric1211", "fabricA120B12111", "neoforge261", "neoforge1211", "neoforgeA1204B12111", "spigot", "velocity") }.map { it.tasks.named("modrinth") })
+//        dependsOn(subprojects.filter { it.name in listOf("paper", "velocity") }.map { it.tasks.named("publishPluginPublicationToHangar") })
+        dependsOn(subprojects.filter { it.name in listOf("fabric261", "fabric1211", "fabricA120B12111", "neoforge261", "neoforge1211", "neoforgeA1204B12111") }.map { it.tasks.named("publishCurseForge") })
+//        dependsOn(subprojects.filter { it.name in listOf("standalone", "paper", "fabric261", "fabric1211", "fabricA120B12111", "neoforge261", "neoforge1211", "neoforgeA1204B12111", "spigot", "velocity") }.map { it.tasks.named("githubRelease") })
     }
 
     register<Copy>("singlePublish") {
@@ -30,10 +39,10 @@ tasks {
         fun List<String>.filterByPlatform() =
             if (platforms != null) intersect(platforms.toSet()).toList() else this
 
-        dependsOn(subprojects.filter { it.name in listOf("paper", "fabric", "neoforge", "spigot", "velocity").filterByPlatform() }.map { it.tasks.named("modrinth") })
+        dependsOn(subprojects.filter { it.name in listOf("paper", "fabric261", "fabric1211", "fabricA120B12111", "neoforge261", "neoforge1211", "neoforgeA1204B12111", "spigot", "velocity").filterByPlatform() }.map { it.tasks.named("modrinth") })
         dependsOn(subprojects.filter { it.name in listOf("paper", "velocity").filterByPlatform() }.map { it.tasks.named("publishPluginPublicationToHangar") })
-        dependsOn(subprojects.filter { it.name in listOf("fabric", "neoforge").filterByPlatform() }.map { it.tasks.named("publishCurseForge") })
-        dependsOn(subprojects.filter { it.name in listOf("standalone", "paper", "fabric", "neoforge", "spigot", "velocity").filterByPlatform() }.map { it.tasks.named("githubRelease") })
+//        dependsOn(subprojects.filter { it.name in listOf("fabric261", "fabric1211", "fabricA120B12111", "neoforge261", "neoforge1211", "neoforgeA1204B12111").filterByPlatform() }.map { it.tasks.named("publishCurseForge") })
+        dependsOn(subprojects.filter { it.name in listOf("standalone", "paper", "fabric261", "fabric1211", "fabricA120B12111", "neoforge261", "neoforge1211", "neoforgeA1204B12111", "spigot", "velocity").filterByPlatform() }.map { it.tasks.named("githubRelease") })
     }
 
     assemble {
