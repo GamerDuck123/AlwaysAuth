@@ -14,15 +14,13 @@ plugins {
 
 stonecutter {
     create(":fabric") {
-        // See https://stonecutter.kikugie.dev/wiki/start/#choosing-minecraft-versions
-        versions("1.20", "1.21.11")
-        vcsVersion = "1.21.11"
+        versions("26.1", "26.1.1", "26.1.2", "26.2", "1.20", "1.21.11", "1.19", "1.18", "1.17", "1.16", "1.15", "1.14.4")
+        vcsVersion = "26.2"
     }
     create(":neoforge") {
-        // See https://stonecutter.kikugie.dev/wiki/start/#choosing-minecraft-versions
-        versions("1.20.4", "1.21.11")
-        vcsVersion = "1.21.11"
+        versions("1.20.4", "1.21.11", "26.1", "26.1.1", "26.1.2", "26.2")
+        vcsVersion = "26.2"
     }
 }
 
-include("common", "paper", "fabric", "fabric261", "neoforge", "neoforge261", "spigot", "velocity", "standalone")
+include("common", "paper", "fabric", "neoforge", "spigot", "velocity", "standalone")

@@ -2,13 +2,7 @@ metadata.format.version = "1.1"
 
 [versions]
 
-minecraft = "1.21.11"
-loader = "0.18.4"
-api = "0.141.3" #Dont include the minecraft version
 brigadier = "1.2.9"
-parchment_mappings="2025.12.20"
-neo="21.11.38-beta"
-neoform="20251209.172050" #Dont include the minecraft version
 mixin="0.8.5"
 extras="0.5.0"
 velocity="3.5.0-SNAPSHOT"
@@ -31,8 +25,6 @@ stonecutter="0.9"
 
 [libraries]
 # Project General
-minecraft = { module = "com.mojang:minecraft", version.ref = "minecraft" }
-fabric_loader = { module = "net.fabricmc:fabric-loader", version.ref = "loader" }
 brigadier = { module = "com.mojang:brigadier", version.ref = "brigadier" }
 mixin = { module = "org.spongepowered:mixin", version.ref = "mixin" }
 extras = { module = "io.github.llamalad7:mixinextras-common", version.ref = "extras" }

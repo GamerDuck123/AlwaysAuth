@@ -29,6 +29,11 @@ public class VelocityPlatform extends Platform<CommandSource> {
     }
 
     @Override
+    public boolean hasPermission(CommandSource commandSender, String permission) {
+        return commandSender.hasPermission(permission);
+    }
+
+    @Override
     public void sendLogMessage(String msg) {
         System.out.println(msg);
     }

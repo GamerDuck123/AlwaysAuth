@@ -16,12 +16,48 @@ allprojects {
     }
 }
 
+fun Project.belongsTo(vararg names: String): Boolean {
+    val targets = names.map { it.lowercase() }.toSet()
+
+    var current: Project? = this
+
+    while (current != null && current != rootProject) {
+        if (current.name.lowercase() in targets) {
+            return true
+        }
+
+        current = current.parent
+    }
+
+    return false
+}
+
 tasks {
+
     publish {
-//        dependsOn(subprojects.filter { it.name in listOf("paper", "fabric261", "fabric1211", "fabricA120B12111", "neoforge261", "neoforge1211", "neoforgeA1204B12111", "spigot", "velocity") }.map { it.tasks.named("modrinth") })
-//        dependsOn(subprojects.filter { it.name in listOf("paper", "velocity") }.map { it.tasks.named("publishPluginPublicationToHangar") })
-        dependsOn(subprojects.filter { it.name in listOf("fabric261", "fabric1211", "fabricA120B12111", "neoforge261", "neoforge1211", "neoforgeA1204B12111") }.map { it.tasks.named("publishCurseForge") })
-//        dependsOn(subprojects.filter { it.name in listOf("standalone", "paper", "fabric261", "fabric1211", "fabricA120B12111", "neoforge261", "neoforge1211", "neoforgeA1204B12111", "spigot", "velocity") }.map { it.tasks.named("githubRelease") })
+        dependsOn(
+            subprojects
+                .filter { it.belongsTo("paper", "fabric", "neoforge", "spigot", "velocity") }
+                .mapNotNull { it.tasks.findByName("modrinth") }
+        )
+
+//        dependsOn(
+//            subprojects
+//                .filter { it.belongsTo("paper", "velocity") }
+//                .mapNotNull { it.tasks.findByName("publishPluginPublicationToHangar") }
+//        )
+
+        dependsOn(
+            subprojects
+                .filter { it.belongsTo("fabric", "neoforge") }
+                .mapNotNull { it.tasks.findByName("publishCurseForge") }
+        )
+
+        dependsOn(
+            subprojects
+                .filter { it.belongsTo("standalone", "paper", "fabric", "neoforge", "spigot", "velocity") }
+                .mapNotNull { it.tasks.findByName("githubRelease") }
+        )
     }
 
     register<Copy>("singlePublish") {
@@ -31,14 +67,14 @@ tasks {
         fun List<String>.filterByPlatform() =
             if (platforms != null) intersect(platforms.toSet()).toList() else this
 
-        dependsOn(subprojects.filter { it.name in listOf("paper", "fabric261", "fabric1211", "fabricA120B12111", "neoforge261", "neoforge1211", "neoforgeA1204B12111", "spigot", "velocity").filterByPlatform() }.map { it.tasks.named("modrinth") })
+        dependsOn(subprojects.filter { it.name in listOf("paper", "fabric", "neoforge", "spigot", "velocity").filterByPlatform() }.map { it.tasks.named("modrinth") })
         dependsOn(subprojects.filter { it.name in listOf("paper", "velocity").filterByPlatform() }.map { it.tasks.named("publishPluginPublicationToHangar") })
-//        dependsOn(subprojects.filter { it.name in listOf("fabric261", "fabric1211", "fabricA120B12111", "neoforge261", "neoforge1211", "neoforgeA1204B12111").filterByPlatform() }.map { it.tasks.named("publishCurseForge") })
-        dependsOn(subprojects.filter { it.name in listOf("standalone", "paper", "fabric261", "fabric1211", "fabricA120B12111", "neoforge261", "neoforge1211", "neoforgeA1204B12111", "spigot", "velocity").filterByPlatform() }.map { it.tasks.named("githubRelease") })
+        dependsOn(subprojects.filter { it.name in listOf("fabric", "neoforge").filterByPlatform() }.map { it.tasks.named("publishCurseForge") })
+        dependsOn(subprojects.filter { it.name in listOf("standalone", "paper", "fabric", "neoforge", "spigot", "velocity").filterByPlatform() }.map { it.tasks.named("githubRelease") })
     }
 
     assemble {
-        dependsOn(subprojects.filter { it.name !in listOf("common", "fabric", "neoforge") }.map {
+        dependsOn(subprojects.filter { it.name !in listOf("common", "fabric", "neoforge", "fabric261") }.map {
             it.tasks.named("clean")
             it.tasks.named("copyCommonSources")
             it.tasks.named("processResources")
@@ -46,7 +82,7 @@ tasks {
         })
     }
     register<Copy>("copyCommonSources") {
-        dependsOn(subprojects.filter { it.name !in listOf("common", "fabric", "neoforge") }.map {
+        dependsOn(subprojects.filter { it.name !in listOf("common", "fabric", "neoforge", "fabric261") }.map {
             it.tasks.named("copyCommonSources")
         })
     }

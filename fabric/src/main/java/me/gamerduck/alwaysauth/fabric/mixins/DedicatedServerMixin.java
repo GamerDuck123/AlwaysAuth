@@ -20,7 +20,7 @@ public abstract class DedicatedServerMixin {
     }
 
     @Inject(method = "<init>", at = @At(value = "RETURN"))
-    private void injected(CallbackInfo ci) {
+    private void injectedInit(CallbackInfo ci) {
 
         MinecraftServer self = (MinecraftServer)(Object) this;
         self.getCommands().getDispatcher().register(Commands.literal("alwaysauth")

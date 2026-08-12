@@ -15,9 +15,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-/**
- * Fetches version numbers from Modrinth API.
- */
 public class ModrinthUpdateChecker {
     private static final String API_URL = "https://api.modrinth.com/v2/project/@modrinthToken@/version";
     private static final String VERSION = "@version@";
@@ -28,6 +25,8 @@ public class ModrinthUpdateChecker {
             .build();
 
     public static Optional<String> getNewer() {
+        List<String> versions = fetchVersionNumbers();
+        if (versions == null || versions.isEmpty()) return Optional.empty();
         Optional<String> newestVersion = fetchVersionNumbers().stream().filter(s -> s.endsWith("-" + LOADER))
                 .map(s -> s.split("-")[0]).findFirst();
         if (newestVersion.isPresent() && FlexVerComparator.compare(newestVersion.get(), VERSION) > 0)
@@ -35,11 +34,6 @@ public class ModrinthUpdateChecker {
         return Optional.empty();
     }
 
-    /**
-     * Fetches all version numbers from Modrinth API.
-     *
-     * @return List of version number strings, or null if fetch fails
-     */
     private static List<String> fetchVersionNumbers() {
         try {
             HttpRequest request = HttpRequest.newBuilder()
@@ -63,12 +57,6 @@ public class ModrinthUpdateChecker {
         }
     }
 
-    /**
-     * Parses the JSON response to extract version numbers.
-     *
-     * @param json Raw JSON response
-     * @return List of version number strings
-     */
     private static List<String> parseVersionNumbers(String json) {
         List<String> versionNumbers = new ArrayList<>();
         JsonArray array = GSON.fromJson(json, JsonArray.class);

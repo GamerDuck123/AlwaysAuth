@@ -83,7 +83,15 @@ tasks.register<Copy>("copyCommonSources") {
 
     from("$rootDir/common/src/main/resources/templates") {
         include("${project.property("modid")}.mixins.json")
-        include("neoforge.mods.toml")
+        if (sc.current.parsed <= "1.20") {
+            include("1.20.neoforge.mods.toml")
+            filesMatching("1.20.neoforge.mods.toml") {
+                relativePath = RelativePath(true, "common/resources/neoforge.mods.toml")
+            }
+        } else {
+            include("neoforge.mods.toml")
+        }
+
         into("common/resources")
 
         filesMatching("${project.property("modid")}.mixins.json") {
@@ -95,8 +103,8 @@ tasks.register<Copy>("copyCommonSources") {
 
         filesMatching("neoforge.mods.toml") {
             expand(mapOf(
-                "minecraftVersion" to property("mod.mc_dep") as String,
-                "neoVersion" to property("mod.neoforge_dep") as String,
+                "minecraftVersion" to project.property("mod.mc_dep"),
+                "neoVersion" to project.property("mod.neoforge_dep"),
                 "modid" to rootProject.property("modid"),
                 "modName" to rootProject.name,
                 "modLicense" to project.property("license"),
@@ -138,7 +146,8 @@ tasks {
     }
     jar {
         destinationDirectory.set(file("${rootProject.layout.projectDirectory}/build/all"))
-        archiveFileName.set("${rootProject.name}-neoforge-1211-${rootProject.version}.jar")
+        archiveFileName.set("${rootProject.name}-neoforge-${sc.current.version}-${rootProject.version}.jar")
+
     }
 }
 

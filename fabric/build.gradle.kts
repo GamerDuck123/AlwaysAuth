@@ -1,6 +1,15 @@
 plugins {
-    id("fabric-plugin")
+    id("fabric-plugin") apply false
+    id("fabric-A261-plugin") apply false
 }
+
+fun isObfuscated() = sc.current.parsed <= "1.21.11"
+
+val pluginId = when {
+    isObfuscated() -> "fabric-plugin"
+    else -> "fabric-A261-plugin"
+}
+pluginId?.let { pluginManager.apply(it) }
 
 val requiredJava = when {
     sc.current.parsed >= "1.21.11" -> JavaVersion.VERSION_25
@@ -10,31 +19,23 @@ val requiredJava = when {
     else -> JavaVersion.VERSION_1_8
 }
 
+val loom = extensions.getByType(net.fabricmc.loom.api.LoomGradleExtensionAPI::class.java)
 
+fun chooseImplementation(dep: Any) {
+    dependencies.add(
+        if (isObfuscated()) "modImplementation" else "implementation",
+        dep
+    )
+}
 dependencies {
-    minecraft("com.mojang:minecraft:${sc.current.version}")
-
-    if (sc.current.parsed <= "1.21.11") mappings(loom.officialMojangMappings())
-
-    if (sc.current.parsed <= "1.21.11") {
-        modImplementation(libs.fabric.loader)
-
-        modImplementation(libs.authlib)
-
-        modImplementation(libs.h2)
-        include(libs.h2)
-        modImplementation(libs.gson)
-        include(libs.gson)
-    } else {
-        implementation(libs.fabric.loader)
-
-        implementation(libs.authlib)
-
-        implementation(libs.h2)
-        include(libs.h2)
-        implementation(libs.gson)
-        include(libs.gson)
-    }
+    "minecraft"("com.mojang:minecraft:${sc.current.version}")
+    if (isObfuscated()) "mappings"(loom.officialMojangMappings())
+    chooseImplementation("net.fabricmc:fabric-loader:${project.property("mod.fabric_loader_dep")}")
+    chooseImplementation("com.mojang:authlib:${project.property("mod.authlib")}")
+    chooseImplementation(libs.h2)
+    "include"(libs.h2)
+    chooseImplementation(libs.gson)
+    "include"(libs.gson)
 }
 
 tasks.register<Copy>("copyCommonSources") {
@@ -55,8 +56,8 @@ tasks.register<Copy>("copyCommonSources") {
 
     from("$rootDir/common/src/main/resources") {
         if (sc.current.parsed >= "1.21.11") {
-            include("12111alwaysauth.classtweaker")
-            filesMatching("12111alwaysauth.classtweaker") {
+            include("1.21.11.alwaysauth.classtweaker")
+            filesMatching("1.21.11.alwaysauth.classtweaker") {
                 relativePath = RelativePath(true, "common/resources/alwaysauth.classtweaker")
             }
         } else if (sc.current.parsed >= "26.1") {
@@ -82,7 +83,7 @@ tasks.register<Copy>("copyCommonSources") {
             expand(
                 mapOf(
                     "group" to "me.gamerduck.alwaysauth.fabric",
-                    "compatibilityLevel" to "JAVA_17"
+                    "compatibilityLevel" to requiredJava.name
                 )
             )
         }
@@ -96,17 +97,16 @@ tasks.register<Copy>("copyCommonSources") {
                     "modid" to rootProject.property("modid"),
                     "mainFile" to "${rootProject.name}Mod",
                     "description" to project.description,
-                    "fabricApiVersion" to libs.versions.api.get(),
-                    "fabricLoaderVersion" to libs.versions.loader.get(),
-                    "minecraftVersion" to libs.versions.minecraft.get(),
+                    "fabricLoaderVersion" to "${project.property("mod.fabric_loader_dep")}",
+                    "minecraftVersion" to sc.current.version,
                     "author" to project.property("author"),
                     "website" to project.property("website"),
                     "sources" to project.property("sources"),
                     "issues" to project.property("issues"),
-                    "accessWidenerEnd" to if (sc.current.parsed >= "1.21.11") "classtweaker" else "accesswidener",
-                    "fabricLoader" to ">=0.15",
-                    "minecraftVersions" to ">=${sc.current.version}",
-                    "javaVersions" to ">=17",
+                    "accessWidenerEnd" to "${project.property("mod.accesswidener_type")}",
+                    "fabricLoader" to ">=${project.property("mod.fabric_loader_dep")}",
+                    "minecraftVersions" to "${project.property("mod.mc_dep")}",
+                    "javaVersions" to "${project.property("mod.java_dep")}",
                 )
             )
         }
@@ -126,15 +126,13 @@ sourceSets {
     }
 }
 
-loom {
-    accessWidenerPath.set(rootProject.file("common/src/main/resources/${rootProject.property("modid")}.classtweaker"))
-
+extensions.configure(net.fabricmc.loom.api.LoomGradleExtensionAPI::class.java) {
+    accessWidenerPath.set(rootProject.file("common/src/main/resources/${rootProject.property("modid")}.${project.property("mod.accesswidener_type")}"))
     mods {
-        create(project.property("modid").toString()) {
+        register(project.property("modid").toString()) {
             sourceSet(sourceSets.main.get())
         }
     }
-
 }
 
 tasks {
@@ -143,10 +141,7 @@ tasks {
     }
     jar {
         destinationDirectory.set(file("${rootProject.layout.projectDirectory}/build/all"))
-        archiveFileName.set("${rootProject.name}-fabric-261-${rootProject.version}.jar")
-    }
-    build {
-//        destinationDirectory.set(file("${rootProject.layout.projectDirectory}/build/all"))
+        archiveFileName.set("${rootProject.name}-fabric-${sc.current.version}-${rootProject.version}.jar")
     }
     processResources {
         dependsOn("copyCommonSources")

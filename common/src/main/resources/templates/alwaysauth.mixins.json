@@ -5,7 +5,7 @@
   "mixins": [
     "AuthenticationURLReplacer",
     "ServerPropertiesReplacer",
-    "ServerPlayerMixin",
+    "ServerLevelMixin",
     "DedicatedServerMixin"
   ],
   "injectors": {

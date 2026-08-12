@@ -2,17 +2,21 @@ package me.gamerduck.alwaysauth;
 
 import java.io.PrintStream;
 import java.nio.file.Path;
+import java.util.Map;
 import java.util.Scanner;
 
 public class StandalonePlatform extends Platform<PrintStream>{
 
-    public StandalonePlatform(Path dataDirectory) {
-        super(dataDirectory);
-    }
-    public static void startup(String[] args, Path dataPath, long startMS) throws Exception {
-        StandalonePlatform standAlonePlatform = new StandalonePlatform(dataPath);
+    public StandalonePlatform(String[] args, Path dataDirectory, long startMS, Map<String, String> configOverrides, boolean daemonMode) throws InterruptedException {
+        super(dataDirectory, configOverrides);
 
-        standAlonePlatform.sendLogMessage(String.format("Done (%sms)! For help, type \"help\"", System.currentTimeMillis() - startMS));
+        sendLogMessage(String.format("Done (%sms)! For help, type \"help\"", System.currentTimeMillis() - startMS));
+
+        if (daemonMode) {
+            sendLogMessage("Running in daemon mode (ALWAYS_AUTH_DAEMON=true). Interactive CLI disabled.");
+            Thread.currentThread().join();
+            return;
+        }
 
         Scanner scanner = new Scanner(System.in);
 
@@ -23,26 +27,26 @@ public class StandalonePlatform extends Platform<PrintStream>{
             if (input.equalsIgnoreCase("exit")
                     || input.equalsIgnoreCase("quit")
                     || input.equalsIgnoreCase("stop")) {
-                standAlonePlatform.sendLogMessage("Shutting down...");
+                sendLogMessage("Shutting down...");
                 break;
             }
 
             String[] cmdArgs = input.split(" ");
             switch (cmdArgs[0].toLowerCase()) {
-                case "status" -> standAlonePlatform.cmdStatus(System.out);
-                case "stats" -> standAlonePlatform.cmdStats(System.out);
-                case "toggle" -> standAlonePlatform.cmdToggle(System.out);
+                case "status" -> cmdStatus(System.out);
+                case "stats" -> cmdStats(System.out);
+                case "toggle" -> cmdToggle(System.out);
                 case "security" -> {
                     if (cmdArgs.length < 2) {
-                        standAlonePlatform.sendLogMessage("Usage: security <basic|medium>");
+                        sendLogMessage("Usage: security <basic|medium>");
                         continue;
                     }
                     String level = cmdArgs[1].toLowerCase();
-                    standAlonePlatform.cmdSecurity(System.out, level);
+                    cmdSecurity(System.out, level);
                 }
-                case "cleanup" -> standAlonePlatform.cmdCleanup(System.out);
-                case "reload" -> standAlonePlatform.cmdReload(System.out);
-                default -> standAlonePlatform.cmdHelp(System.out);
+                case "cleanup" -> cmdCleanup(System.out);
+                case "reload" -> cmdReload(System.out);
+                default -> cmdHelp(System.out);
             }
         }
 
@@ -52,6 +56,11 @@ public class StandalonePlatform extends Platform<PrintStream>{
     @Override
     public void sendMessage(PrintStream commandSender, String msg) {
         sendLogMessage(msg.replaceAll("§.", ""));
+    }
+
+    @Override
+    public boolean hasPermission(PrintStream commandSender, String permission) {
+        return true;
     }
 
     @Override

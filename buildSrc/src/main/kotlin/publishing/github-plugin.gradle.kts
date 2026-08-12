@@ -3,6 +3,13 @@ plugins {
 }
 
 githubRelease {
+
+    val platformName = project.parent
+        ?.takeIf { it != project.rootProject }
+        ?.name
+        ?: project.name
+
+
     token(System.getenv("GITHUB_TOKEN"))
     owner.set("GamerDuck123")
     repo.set(rootProject.property("githubID") as String)
@@ -16,9 +23,12 @@ githubRelease {
     draft.set(false)
     prerelease.set((rootProject.property("versionType") as String) != "release")
 
-    releaseAssets.setFrom(when (project.name) {
-        "fabricA120B12111", "fabric1211" -> tasks.named<net.fabricmc.loom.task.RemapJarTask>("remapJar").flatMap { it.archiveFile }
-        "neoforgeA1204B12111", "fabric", "neoforge261", "neoforge1211", "fabric261", "standalone", "paper", "spigot", "velocity" -> tasks.named<Jar>("jar").flatMap { it.archiveFile }
+    releaseAssets.setFrom(when (platformName) {
+        "fabric" -> when (project.name) {
+            "26.1", "26.1.1", "26.1.2", "26.2" -> tasks.named<Jar>("jar").flatMap { it.archiveFile }
+            else -> tasks.named<net.fabricmc.loom.task.RemapJarTask>("remapJar").flatMap { it.archiveFile }
+        }
+        "neoforge", "fabric261", "standalone", "paper", "spigot", "velocity" -> tasks.named<Jar>("jar").flatMap { it.archiveFile }
         else -> throw IllegalStateException("Unknown module for GitHub publishing: ${project.name}")
     })
 

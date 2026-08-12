@@ -53,6 +53,11 @@ public class SpigotPlatform extends Platform<CommandSender> implements Listener 
     }
 
     @Override
+    public boolean hasPermission(CommandSender commandSender, String permission) {
+        return commandSender.hasPermission(permission);
+    }
+
+    @Override
     public void sendLogMessage(String msg) {
         LOGGER.info(msg.replaceAll("§.", ""));
     }

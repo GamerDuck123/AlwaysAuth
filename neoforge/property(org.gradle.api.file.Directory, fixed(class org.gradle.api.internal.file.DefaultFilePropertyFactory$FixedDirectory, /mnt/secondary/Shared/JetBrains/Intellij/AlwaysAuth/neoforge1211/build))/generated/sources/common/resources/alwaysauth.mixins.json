@@ -1,6 +1,6 @@
 {
   "required": true,
-  "package": "me.gamerduck.alwaysauth.neoforge1211.mixins",
+  "package": "me.gamerduck.alwaysauth.neoforge.mixins",
   "compatibilityLevel": "JAVA_17",
   "mixins": [
     "AuthenticationURLReplacer",
