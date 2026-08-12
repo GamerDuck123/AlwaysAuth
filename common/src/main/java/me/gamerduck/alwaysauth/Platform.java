@@ -25,8 +25,9 @@ public abstract class Platform<CS> {
         mixinOnly$instance = this;
         try {
             config = new SessionConfig(platformFolder.toFile(), this, configOverrides);
-            sendLogMessage("Configuration loaded: " + config);
-
+            if (config.getDebug()) {
+                sendLogMessage("Configuration loaded: " + config);
+            }
             if (config.getIpAddress().equalsIgnoreCase("127.0.0.1")
                     || config.getIpAddress().equalsIgnoreCase("0.0.0.0")) {
                 proxyServer = new SessionProxyServer(
@@ -95,8 +96,8 @@ public abstract class Platform<CS> {
     public void cmdStats(CS player) {
         AuthDatabase.CacheStats stats = proxyServer.getDatabase().getStats();
         sendMessage(player,"§6§lCache Statistics");
-        sendMessage(player,"§7Total Players: §f" + stats.totalPlayers);
-        sendMessage(player,"§7Active (24h): §f" + stats.recentPlayers);
+        sendMessage(player,"§7Total Players: §f" + stats.totalPlayers());
+        sendMessage(player,"§7Active (24h): §f" + stats.recentPlayers());
     }
 
     public void cmdToggle(CS player) {
@@ -108,6 +109,7 @@ public abstract class Platform<CS> {
     public void cmdSecurity(CS player, String level) {
         if (!level.equals("basic") && !level.equals("medium")) {
             sendMessage(player,"§cInvalid security level. Use 'basic' or 'medium'");
+            return;
         }
         config.setSecurityLevel(level);
         config.saveConfig();

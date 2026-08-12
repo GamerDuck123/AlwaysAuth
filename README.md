@@ -119,7 +119,7 @@ fallback-enabled=true
 max-offline-hours=72
 # Days before old session data is cleaned up
 cleanup-days=30
-# Security level: 'basic' (always verify) or 'medium' (use max-offline-hours)
+# Security level: 'basic' (IP verification) or 'medium' (IP verification + max-offline-hours)
 security-level=basic
 # Upstream Session Server URL
 # Default is Mojang's official one but this option is here to work with things like minehut's external servers

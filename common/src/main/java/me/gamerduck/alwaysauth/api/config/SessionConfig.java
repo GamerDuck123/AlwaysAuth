@@ -214,7 +214,7 @@ public class SessionConfig {
         setProperty("fallback-enabled", String.valueOf(DEFAULT_FALLBACK_ENABLED), "Enable session fallback when Mojang servers are down");
         setProperty("max-offline-hours", String.valueOf(DEFAULT_MAX_OFFLINE_HOURS), "Maximum hours a player can stay offline before requiring re-authentication (0 = always require)");
         setProperty("cleanup-days", String.valueOf(DEFAULT_CLEANUP_DAYS), "Days before old session data is cleaned up");
-        setProperty("security-level", "basic", "Security level: 'basic' (always verify) or 'medium' (use max-offline-hours)");
+        setProperty("security-level", "basic", "Security level: 'basic' (IP check only) or 'medium' (IP Check + max-offline-hours limit)");
         setProperty("upstream-server", "https://sessionserver.mojang.com", "Upstream Session Server URL\n# Default is Mojang's official one but this option is here to work with things like minehut's external servers");
 
         addComment("\n###########################\n"
@@ -302,10 +302,6 @@ public class SessionConfig {
     }
 
     public int getMaxOfflineHours() {
-        String level = properties.getOrDefault("security-level", "basic");
-        if ("basic".equalsIgnoreCase(level)) {
-            return 0;
-        }
         return Integer.parseInt(properties.getOrDefault("max-offline-hours", String.valueOf(DEFAULT_MAX_OFFLINE_HOURS)));
     }
 
@@ -322,7 +318,7 @@ public class SessionConfig {
     }
 
     public String getSecurityLevel() {
-        return properties.getOrDefault("security-level", "basic");
+        return properties.getOrDefault("security-level", "basic").toLowerCase();
     }
 
     public String getSessionServerUrl() {
@@ -372,10 +368,6 @@ public class SessionConfig {
 
     public void setSecretKey(String key) {
         properties.put("secret-key", key);
-    }
-
-    public void setEncryptProfileData(boolean encrypt) {
-        properties.put("encrypt-profile-data", String.valueOf(encrypt));
     }
 
     public void setFallbackEnabled(boolean enabled) {

@@ -38,7 +38,7 @@ public class AuthDatabase {
 
             if (platform.config().getDebug()) {
                 platform.sendLogMessage("H2 database initialized at: " + dbFile.getAbsolutePath() + ".mv.db");
-                platform.sendLogMessage("Database encryption: ENABLED (AES-256-GCM)");
+                platform.sendLogMessage("Database encryption: ENABLED");
             }
         } catch (Exception e) {
             platform.sendSevereLogMessage("Failed to initialize H2 database: " + e.getMessage());
@@ -76,7 +76,7 @@ public class AuthDatabase {
 
             if (platform.config().getDebug()) {
                 platform.sendLogMessage("Remote database connection established to " + host + ":" + port + "/" + database);
-                platform.sendLogMessage("Database encryption: ENABLED (AES-256-GCM)");
+                platform.sendLogMessage("Database encryption: ENABLED");
             }
 
         } catch (Exception e) {
@@ -145,7 +145,7 @@ public class AuthDatabase {
         }
     }
 
-    public String getFallbackAuth(String username, String ip, int maxOfflineHours) {
+    public String getFallbackAuth(String username, String ip, String securityLevel, int maxOfflineHours) {
         if (username == null) return null;
 
         try {
@@ -171,7 +171,7 @@ public class AuthDatabase {
                             return null;
                         }
 
-                        if (maxOfflineHours > 0) {
+                        if (securityLevel.equals("medium") && maxOfflineHours > 0) {
                             long hoursSinceLastSeen = (System.currentTimeMillis() - lastSeen) / (1000 * 60 * 60);
                             if (hoursSinceLastSeen > maxOfflineHours) {
                                 platform.sendWarningLogMessage("Auth cache expired for " + username + " - last seen " + hoursSinceLastSeen + " hours ago");

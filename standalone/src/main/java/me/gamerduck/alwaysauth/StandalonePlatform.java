@@ -27,6 +27,7 @@ public class StandalonePlatform extends Platform<PrintStream>{
             if (input.equalsIgnoreCase("exit")
                     || input.equalsIgnoreCase("quit")
                     || input.equalsIgnoreCase("stop")) {
+                onDisable();
                 sendLogMessage("Shutting down...");
                 break;
             }

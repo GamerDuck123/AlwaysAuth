@@ -158,7 +158,7 @@ public class SessionProxyServer {
                 platform.sendWarningLogMessage("Upstream authentication failed for " + username + ": " + e.getMessage());
 
                 if (config.isFallbackEnabled()) {
-                    String fallbackResponse = database.getFallbackAuth(username, ip, config.getMaxOfflineHours());
+                    String fallbackResponse = database.getFallbackAuth(username, ip, config.getSecurityLevel(), config.getMaxOfflineHours());
 
                     if (fallbackResponse != null) {
                         platform.sendWarningLogMessage("Using FALLBACK authentication for " + username);
