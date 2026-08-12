@@ -115,7 +115,7 @@ secret-key=GENERATED ON STARTUP
 
 # Enable session fallback when Mojang servers are down
 fallback-enabled=true
-# Maximum hours a player can stay offline before requiring re-authentication (0 = always require)
+# Maximum hours a player can stay offline before requiring re-authentication (0 makes medium level act like basic)
 max-offline-hours=72
 # Days before old session data is cleaned up
 cleanup-days=30

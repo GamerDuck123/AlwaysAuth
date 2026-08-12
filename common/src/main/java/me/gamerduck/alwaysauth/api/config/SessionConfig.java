@@ -212,7 +212,7 @@ public class SessionConfig {
                 + "#    Fallback Settings    #\n"
                 + "###########################");
         setProperty("fallback-enabled", String.valueOf(DEFAULT_FALLBACK_ENABLED), "Enable session fallback when Mojang servers are down");
-        setProperty("max-offline-hours", String.valueOf(DEFAULT_MAX_OFFLINE_HOURS), "Maximum hours a player can stay offline before requiring re-authentication (0 = always require)");
+        setProperty("max-offline-hours", String.valueOf(DEFAULT_MAX_OFFLINE_HOURS), "Maximum hours a player can stay offline before requiring re-authentication (0 makes medium level act like basic)");
         setProperty("cleanup-days", String.valueOf(DEFAULT_CLEANUP_DAYS), "Days before old session data is cleaned up");
         setProperty("security-level", "basic", "Security level: 'basic' (IP check only) or 'medium' (IP Check + max-offline-hours limit)");
         setProperty("upstream-server", "https://sessionserver.mojang.com", "Upstream Session Server URL\n# Default is Mojang's official one but this option is here to work with things like minehut's external servers");
